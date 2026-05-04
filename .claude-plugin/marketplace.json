@@ -1,0 +1,14 @@
+{
+  "name": "fhqvst",
+  "description": "Various Claude Code plugins.",
+  "owner": {
+    "name": "Filip Hallqvist"
+  },
+  "plugins": [
+    {
+      "name": "specular",
+      "source": "./specular",
+      "description": "Agent-driven development workflow with Linear as the source of truth: specify, plan, and run an autonomous implement loop."
+    }
+  ]
+}

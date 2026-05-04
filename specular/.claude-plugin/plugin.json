@@ -1,0 +1,11 @@
+{
+  "name": "specular",
+  "description": "Agent-driven development workflow with Linear as the source of truth: specify, plan, and run an autonomous implement loop.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Filip Hallqvist"
+  },
+  "repository": "https://github.com/fhqvst/agents",
+  "license": "MIT",
+  "keywords": ["linear", "rfc", "tdd", "agent", "workflow"]
+}
