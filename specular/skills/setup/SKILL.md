@@ -1,18 +1,17 @@
 ---
 name: setup
-description: Create or update the repo's `SPECULAR.md` (Linear routing + validation commands) and pre-approve the tools the headless implement loop needs in `.claude/settings.json`. Use when the user asks to "set up specular", configure specular, or when other specular skills report that this context is missing.
+description: Create or update the repo's `SPECULAR.md` (Linear routing) and pre-approve the tools the headless implement loop needs in `.claude/settings.json`. Use when the user asks to "set up specular", configure specular, or when other specular skills report that this context is missing.
 ---
 
 # Setup
 
-Specular keeps its config in a single `SPECULAR.md` at the repo root. This skill creates or updates that file and the `.claude/settings.json` allowlist. It never touches `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.
+Specular keeps its config in a single `SPECULAR.md` at the repo root. This skill creates or updates that file and the `.claude/settings.json` allowlist.
 
 This skill's job is to confirm:
 
 1. Hard dependencies are installed (Linear MCP, `git`, `gh`, `jq`).
-2. `SPECULAR.md` at the repo root names the Linear **team** and (optionally) **project** new issues should be filed under.
-3. `SPECULAR.md` names the project's **lint**, **typecheck**, and **test** commands (when they exist).
-4. The repo's `.claude/settings.json` pre-approves the tools the headless implement loop will need.
+2. `SPECULAR.md` at the repo root lists the Linear projects new issues can land in, plus any glob-based path routing for monorepos.
+3. The repo's `.claude/settings.json` pre-approves the tools the headless implement loop will need.
 
 If anything is missing, offer to add it.
 
@@ -34,55 +33,60 @@ Do not continue until all four are available.
 
 ### 1. Read or create `SPECULAR.md`
 
-Look for `SPECULAR.md` at the repo root. If it doesn't exist, you'll create it later in this skill. The expected shape:
+Look for `SPECULAR.md` at the repo root. If it doesn't exist, you'll create it later in this skill. The expected shape is a `## Linear` section with one `### <project>` subsection per Linear project this repo files into:
 
 ```md
 # Specular
 
 ## Linear
 
-File Linear tickets under team **<team>**, project **<project>**. Leave new tickets unassigned unless told otherwise.
+### Q2 Roadmap (`<project-id>`)
 
-## Validation
+- Assignee: filip (`<user-id>`)
 
-Run `<lint cmd>` for lint, `<typecheck cmd>` for typecheck, `<test cmd>` for tests.
+### Web (`<project-id>`)
+
+- Paths: `apps/web/**`, `packages/web-ui/**`
+- Assignee: alice (`<user-id>`)
 ```
 
-Both sections are prose, not strict syntax - downstream skills read them with an LLM. Free-form additions (monorepo path → project routing, assignee policy, RFC label preferences, "no typechecker", etc.) are fine.
+Rules:
 
-### 2. Linear routing
+- One `###` subsection per project; the project's name and id go in the heading.
+- Each subsection has flat key-value bullets - never deeper than one level.
+- `Paths` is a comma-separated list of globs. The project that has **no `Paths`** is the implicit default (the catch-all for anything that doesn't match a glob).
+- `Assignee` is optional.
+- Team is **not** stored - it's derivable from the project. Edge case: if the user wants "file under team X with no project", omit all `###` subsections and put flat `Team:` and (optional) `Assignee:` bullets directly under `## Linear` instead.
+- Don't invent extra keys.
 
-Does `SPECULAR.md` already have a `## Linear` section that names a team and project?
+### 2. Linear projects
 
-If missing:
+Does `SPECULAR.md` already have a `## Linear` section with at least one `### <project>` subsection (or a `Team:` line)? If yes, skip to step 3.
 
-- Use `mcp__plugin_linear_linear__list_teams` to list teams. Ask which one.
-- Use `mcp__plugin_linear_linear__list_projects` (filtered by team) to list projects. Ask which one, or "none".
-- For monorepos with multiple Linear projects, ask whether routing depends on the area being changed (e.g. `auth/*` → one project, `billing/*` → another). Capture the routing rule as prose under `## Linear`.
-- Propose the section text, e.g.:
+If missing, walk the user through projects **one at a time**. Never write a value the user hasn't explicitly approved - inferences from git author, repo name, or "who leads what" are too brittle to commit to disk without confirmation.
 
-  > File Linear tickets under team **Platform**, project **Q2 Roadmap**. Leave new tickets unassigned unless told otherwise.
+For each project:
 
-  (If the user wants tickets self-assigned by default, or a specific RFC label, capture that here too.)
+- Call `mcp__plugin_linear_linear__list_projects`. Recommend the project that best matches the repo (by name overlap with the repo directory, recent commits, or `CLAUDE.md` context) but always show the full list. Ask: *"Which Linear project should new tickets be filed under? Recommend `<X>` - alternatives: `<Y>`, `<Z>`. Pick one, or say 'none' for team-only routing."*
+- Ask about assignee for this project: *"Default assignee for tickets in `<project>`? Self-assigned, someone specific, or unassigned? Recommend unassigned."* Resolve via `mcp__plugin_linear_linear__list_users` if needed.
+- After the first project is captured, ask: *"Any more Linear projects this repo files tickets into?"* and loop. Stop when they say no.
 
-- Show the diff and ask before writing.
+If they answered "none" (team-only routing), prompt for the team via `mcp__plugin_linear_linear__list_teams` and the assignee, then write flat `Team:` and (optional) `Assignee:` bullets under `## Linear` - skip the rest of this step and step 3.
 
-### 3. Validation commands
+Compose the `### <project>` subsections (without `Paths` for now), show a diff, and ask one final time before writing.
 
-Does `SPECULAR.md` already have a `## Validation` section?
+### 3. Path-based routing (monorepos)
 
-If missing, detect candidates from the repo (don't ask blind):
+Only relevant when step 2 produced **more than one** project subsection. If there's just one, skip - it's already the implicit default.
 
-- `package.json` `scripts` (`lint`, `typecheck`, `test`, `check`, `tsc`)
-- `Cargo.toml` (Rust: `cargo clippy`, `cargo check`, `cargo test`)
-- `pyproject.toml` / `setup.py` / `tox.ini` / `Makefile` / `justfile`
-- `bun.lockb` / `pnpm-lock.yaml` / `yarn.lock` / `package-lock.json` for the runner
+For each project except the catch-all, ask the user which paths it owns:
 
-Propose concrete commands based on what you found, then ask the user: *"Does this look right? Anything I missed, or any commands I should drop?"* If a category doesn't apply (no typechecker, etc.), say so explicitly so downstream skills know to skip it. Example section:
+- *"Which paths or globs are covered by `<project>`?"* (plural - recommend concrete candidates based on the repo layout, e.g. `apps/web/**` and `packages/web-ui/**`, but never auto-pick).
+- Add a `Paths: <glob>, <glob>` bullet to that project's subsection.
 
-> Run `bun run lint` for lint, `bun run typecheck` for typecheck, `bun test` for tests. No separate end-to-end suite.
+Leave exactly one project with no `Paths` bullet - it's the catch-all. If the user is unsure which one should be the catch-all, ask them.
 
-`/specular:implement` will run these as a hard gate before each commit.
+`/specular:specify` matches RFC scope against `Paths` globs at file time. If nothing matches, it falls back to the project with no `Paths`.
 
 ### 4. Build the `.claude/settings.json` allowlist
 
@@ -125,16 +129,19 @@ Always required - the loop commits, pushes, opens a PR, and parses JSON. Keep th
   - `mcp__plugin_figma_figma__*` - design references
   - other project-specific servers
 
-#### d. Validation + anything else the loop will run
+#### d. Project runners and anything else the loop will run
 
-Seed the proposal from the validation commands captured in step 3. For each command, add a `Bash(<leading-binary>:*)` entry. Examples:
+The implement loop figures out its own lint/typecheck/test commands per sub-issue (from `package.json`, `Cargo.toml`, `Makefile`, etc.), but the runners themselves still need to be pre-approved. Detect candidates from the repo:
 
-- `bun run lint`, `bun test` → `Bash(bun:*)`, `Bash(bunx:*)`
-- `cargo clippy`, `cargo test` → `Bash(cargo:*)`
-- `pnpm lint`, `pnpm test` → `Bash(pnpm:*)`, `Bash(pnpx:*)`
-- `./scripts/check.sh` → `Bash(./scripts/check.sh:*)`
+- `bun.lockb` / `package.json` → `Bash(bun:*)`, `Bash(bunx:*)`
+- `pnpm-lock.yaml` → `Bash(pnpm:*)`, `Bash(pnpx:*)`
+- `yarn.lock` → `Bash(yarn:*)`
+- `package-lock.json` → `Bash(npm:*)`, `Bash(npx:*)`
+- `Cargo.toml` → `Bash(cargo:*)`
+- `pyproject.toml` / `setup.py` → `Bash(uv:*)`, `Bash(python:*)`, `Bash(pytest:*)` as applicable
+- `Makefile` / `justfile` → `Bash(make:*)`, `Bash(just:*)`
 
-Then **ask the user**: *"Anything else the loop will run that isn't covered? Codegen, migrations, deploy CLIs, custom `scripts/`?"* - add what they mention as additional `Bash(...:*)` entries.
+Propose the entries based on what you found. Then **ask the user**: *"Anything else the loop will run that isn't covered? Codegen, migrations, deploy CLIs, custom `scripts/`?"* - add what they mention as additional `Bash(...:*)` entries.
 
 #### Merge and write
 
@@ -148,4 +155,4 @@ Mention to the user that this is the repo-level settings file and will be commit
 
 ### 5. Done
 
-Write any pending changes to `SPECULAR.md` (showing a diff first) and tell the user setup is complete. `/specular:specify`, `/specular:plan`, and `/specular:implement` will pick up Linear routing and validation commands from `SPECULAR.md`.
+Write any pending changes to `SPECULAR.md` (showing a diff first) and tell the user setup is complete. `/specular:specify`, `/specular:plan`, and `/specular:implement` will pick up Linear projects and path routing from `SPECULAR.md`.

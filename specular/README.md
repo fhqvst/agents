@@ -52,7 +52,7 @@ agent:  *builds a different wrong thing*
 ## Getting started
 
 > [!IMPORTANT]
-> The implement loop runs headless (`claude --print`) and cannot surface permission prompts mid-flight. Anything it needs to run has to be allowed up front. `/specular:setup` figures out what to allow from your validation commands and writes the allowlist for you - run it before `/specular:implement`.
+> The implement loop runs headless (`claude --print`) and cannot surface permission prompts mid-flight. Anything it needs to run has to be allowed up front. `/specular:setup` figures out what to allow from your project's runner (`bun`, `cargo`, etc.) and writes the allowlist for you - run it before `/specular:implement`.
 
 1. **Authenticate the Linear MCP.** In Claude Code, run `/plugin`, install the Linear plugin, and sign in. Specular speaks to Linear through this MCP.
 
@@ -123,14 +123,21 @@ A single `SPECULAR.md` at the repo root holds Specular's config in prose:
 
 ## Linear
 
-File Linear tickets under team **Platform**, project **Q2 Roadmap**. Leave new tickets unassigned unless told otherwise.
+### Q2 Roadmap (`<project-id>`)
 
-## Validation
+- Assignee: filip (`<user-id>`)
 
-Run `bun run lint` for lint, `bun run typecheck` for typecheck, `bun test` for tests.
+### Web (`<project-id>`)
+
+- Paths: `apps/web/**`, `packages/web-ui/**`
+- Assignee: alice (`<user-id>`)
+
+### SDK (`<project-id>`)
+
+- Paths: `packages/sdk/**`
 ```
 
-`/specular:specify` and `/specular:plan` read the `## Linear` section to decide where to file issues. The implement loop reads `## Validation` and runs those commands as a hard gate before each commit. Both sections are free-form prose - monorepo path → project routing, "no typechecker", RFC label preferences, etc. all go inline.
+`/specular:specify` and `/specular:plan` read the `## Linear` section to decide where to file issues. Each `###` subsection is one Linear project; `Paths` are the globs it owns. The project with no `Paths` is the implicit catch-all when nothing matches. The implement loop detects lint/typecheck/test commands per project (from `package.json`, `Cargo.toml`, etc.) and runs them as a hard gate before each commit - no need to declare them here.
 
 It's a separate file (rather than a section in `CLAUDE.md` / `AGENTS.md`) on purpose - those files are shared real estate with whatever other agent tooling you use, and we don't want Specular to squat on them. If you swap Specular out later, deleting `SPECULAR.md` cleanly removes its footprint.
 
@@ -138,7 +145,7 @@ It's a separate file (rather than a section in `CLAUDE.md` / `AGENTS.md`) on pur
 
 ### `/specular:setup` *(one-time per repo)*
 
-Creates or updates `SPECULAR.md` at the repo root and confirms three things: which Linear **team/project** new issues belong under, the **lint/typecheck/test commands** the implement loop should treat as a hard gate, and that `.claude/settings.json` pre-approves the Bash patterns the headless loop will need (derived from the validation commands plus a baseline of `git`, `gh`, `jq`). Anything missing, setup offers to write in. Never modifies `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.
+Creates or updates `SPECULAR.md` at the repo root and confirms two things: which Linear **projects** new issues file into (plus optional **glob-based path routing** for monorepos), and that `.claude/settings.json` pre-approves the Bash patterns the headless loop will need (`git`, `gh`, `jq`, plus the project's runner like `bun` / `cargo` / `pnpm`). Anything missing, setup offers to write in. Never modifies `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.
 
 ### `/specular:specify`
 
@@ -162,7 +169,7 @@ The headless loop. Each iteration:
 
 1. Picks the next eligible AFK sub-issue.
 2. Implements it test-first, in a worktree dedicated to the parent (created as a sibling of your CWD, named after Linear's `branchName`).
-3. Runs your configured lint/typecheck/test commands as a hard gate.
+3. Runs the project's lint/typecheck/test commands as a hard gate (auto-detected from `package.json`, `Cargo.toml`, `Makefile`, etc.).
 4. Commits, pushes, and transitions the sub-issue to **Done** via the Linear MCP.
 5. Repeats until no eligible AFK sub-issues remain, then opens the PR.
 

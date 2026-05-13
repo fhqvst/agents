@@ -12,7 +12,7 @@ Produce a Linear issue with two layers:
 
 ## 0. Confirm Linear context
 
-`SPECULAR.md` at the repo root should tell you which Linear team and project to file new issues under, and whether RFCs should carry a specific label or assignee. If it's missing or doesn't have a `## Linear` section, tell the user to run `/specular:setup` first and stop.
+`SPECULAR.md` at the repo root lists the Linear projects this repo files into (one `### <project>` subsection each, with optional `Paths` and `Assignee`). If it's missing or doesn't have a `## Linear` section, tell the user to run `/specular:setup` first and stop.
 
 ## 1. Grill
 
@@ -224,7 +224,7 @@ Show the composed body to the user. Ask if they want to adjust anything.
 Once approved, create the issue with `mcp__plugin_linear_linear__save_issue`:
 
 - Title: a concise summary derived from the Problem section
-- Team / project / assignee / label: per `SPECULAR.md`'s `## Linear` section. Resolve team and project names to IDs via `mcp__plugin_linear_linear__list_teams` / `list_projects`. If the section doesn't mention an assignee, leave it unassigned. If it doesn't mention a label, skip the label.
+- Project / assignee: pick the project whose `Paths` globs match the RFC's scope (Implementation pseudocode, References, area being touched). If no globs match, fall back to the project with no `Paths` bullet (the catch-all). If multiple projects match, ask the user which one. The chosen project's `Assignee`, if any, is the default; otherwise leave it unset. Team is derived from the project. IDs are baked into `SPECULAR.md` headings - parse them out rather than re-resolving via `list_projects`. Edge case: if `## Linear` has flat `Team:` / `Assignee:` bullets and no `###` project subsections, file under that team with no project, using the listed assignee (if any).
 - Description: the composed body
 - `links`: if section 5 ran, attach the Figma prototype URL as `[{url, title: "Figma prototype - <feature>"}]`. Linear renders this as a preview card in the issue sidebar.
 

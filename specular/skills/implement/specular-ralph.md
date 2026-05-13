@@ -31,15 +31,15 @@ Invoke `/specular:work-on-issue` with the sub-issue body, identifier, and the pa
 
 # Validate (hard gate)
 
-`SPECULAR.md` at the repo root names the lint, typecheck, and test commands under its `## Validation` section. Run each one that applies. If any fails:
+Before committing, run the project's lint, typecheck, and test commands. Detect them from project files (`package.json` scripts, `Cargo.toml`, `Makefile`, `justfile`, `pyproject.toml`, etc.) - whatever the repo uses. Skip categories that don't apply (no typechecker, no separate lint, etc.).
+
+If any command fails:
 
 - Do NOT commit.
 - Leave a comment on the sub-issue summarising the failure (command, exit code, last ~30 lines of output).
 - End the turn without emitting the sentinel. Do not push.
 
-If `SPECULAR.md` is missing or has no `## Validation` section, leave a comment on the sub-issue asking the user to run `/specular:setup` to add it, and exit without committing.
-
-Only proceed to commit when all configured validation commands pass cleanly.
+Only proceed to commit when every applicable validation command passes cleanly.
 
 # Commit, push, transition
 
@@ -61,6 +61,6 @@ Only when no eligible sub-issue. From the worktree, run `gh pr view --json numbe
 
 - One sub-issue per iteration. Never batch.
 - Never modify the parent (body, state, labels).
-- Validation commands from `SPECULAR.md` are a hard gate - never commit on a red build.
+- Auto-detected validation (lint, typecheck, tests) is a hard gate - never commit on a red build.
 - Never PR mid-loop - PR creation is terminal-only.
 - On unexpected breakage (conflicts, missing branchName, broken main): leave a comment on the sub-issue, exit. No force-push, no destroying work.
