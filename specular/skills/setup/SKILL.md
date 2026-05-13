@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Make sure the repo's CLAUDE.md (or AGENTS.md / GEMINI.md) tells specular which Linear team and project to file issues under and which lint/typecheck/test commands to run, and that `.claude/settings.json` pre-approves the Bash patterns the headless implement loop will need. Use when the user asks to "set up specular", configure specular, or when other specular skills report that this context is missing.
+description: Make sure the repo's CLAUDE.md (or AGENTS.md / GEMINI.md) tells specular which Linear team and project to file issues under and which lint/typecheck/test commands to run, and that `.claude/settings.json` pre-approves the tools the headless implement loop will need. Use when the user asks to "set up specular", configure specular, or when other specular skills report that this context is missing.
 ---
 
 # Setup
@@ -9,23 +9,28 @@ Specular reads everything it needs from the repo's agent-instruction file (`CLAU
 
 This skill's job is to confirm:
 
-1. The agent-instruction file names the Linear **team** and (optionally) **project** new issues should be filed under.
-2. The agent-instruction file names the project's **lint**, **typecheck**, and **test** commands.
-3. The repo's `.claude/settings.json` pre-approves the Bash patterns the headless implement loop will need (`git`, `gh`, `jq`, `claude`, plus whatever the validation commands invoke).
+1. Hard dependencies are installed (Linear MCP, `git`, `gh`, `jq`).
+2. The agent-instruction file names the Linear **team** and (optionally) **project** new issues should be filed under.
+3. The agent-instruction file names the project's **lint**, **typecheck**, and **test** commands.
+4. The repo's `.claude/settings.json` pre-approves the tools the headless implement loop will need.
 
 If anything is missing, offer to add it.
 
 ## Process
 
-### 0. Verify the Linear MCP is available
+### 0. Dependency check
 
-Try a no-op call: `mcp__plugin_linear_linear__list_teams`.
+The implement loop hard-requires:
 
-If the tool is not available, the Linear plugin isn't installed. Tell the user:
+- **Linear MCP plugin** - probe with `mcp__plugin_linear_linear__list_teams`.
+- **`git`**, **`gh`**, **`jq`** binaries on PATH - check with `command -v git`, `command -v gh`, `command -v jq`.
 
-> The Linear MCP plugin isn't installed. Install it from the Claude Code plugin marketplace (`/plugin` in the Claude Code UI, or follow https://docs.claude.com/en/docs/claude-code/plugins) and re-run `/specular:setup`.
+If any are missing, stop and tell the user exactly what's missing and how to install it:
 
-Then stop. Do not continue without the MCP.
+- Linear MCP: install from the Claude Code plugin marketplace (`/plugin` in the UI, or https://docs.claude.com/en/docs/claude-code/plugins).
+- `git` / `gh` / `jq`: install via the user's package manager (e.g. `brew install gh jq`).
+
+Do not continue until all four are available.
 
 ### 1. Find the agent-instruction file
 
@@ -64,29 +69,55 @@ Propose concrete commands and let the user confirm or edit. If a category doesn'
 
 `/specular:implement` will run these as a hard gate before each commit.
 
-### 4. Check Bash permission allowlist
+### 4. Build the `.claude/settings.json` allowlist
 
-The implement loop runs headless (`claude --print`) and cannot surface permission prompts mid-flight - any Bash invocation that isn't pre-approved will stall it. The lint/typecheck/test trio from step 3 is **not** the full set: the loop will also run build steps, codegen, migrations, formatters, ad-hoc scripts, file ops, and whatever else a sub-issue plausibly requires. Be generous - false positives here are cheap, false negatives stall the loop.
+The implement loop runs headless (`claude --print`) and cannot surface permission prompts mid-flight - any tool call that isn't pre-approved stalls it. The allowlist is **focused, not exhaustive** - it covers the categories below and nothing else. Read-only Bash globs auto-approve since 2.1.111, so generic file utilities (`cat`, `head`, `grep`, `find`, `ls`, etc.) don't belong here.
 
-Make sure `.claude/settings.json` (repo-level, committed so the team shares the allowlist) has a `permissions.allow` entry covering everything the loop is likely to invoke.
+Build the proposed list from these four categories:
 
-Build the proposed allowlist by **detecting manifests, not by parsing the validation commands**:
+#### a. Specular's own sub-skill invocations
 
-- **Baseline (always include):** `Bash(git *)`, `Bash(gh *)`, `Bash(jq *)`, `Bash(claude *)`, `Bash(specular-ralph *)`, `Bash(mkdir *)`, `Bash(rm *)`, `Bash(mv *)`, `Bash(cp *)`, `Bash(ls *)`, `Bash(cat *)`, `Bash(grep *)`, `Bash(rg *)`, `Bash(ag *)`, `Bash(find *)`, `Bash(sed *)`, `Bash(awk *)`, `Bash(echo *)`, `Bash(test *)`, `Bash(which *)`, `Bash(env *)`, `Bash(printenv *)`.
-- **JS/TS** - if `package.json` exists, add `Bash(node *)`, `Bash(npx *)`, `Bash(tsc *)`, `Bash(eslint *)`, `Bash(prettier *)`, `Bash(vitest *)`, `Bash(jest *)`, plus the runner indicated by the lockfile:
-  - `bun.lockb` / `bun.lock` → `Bash(bun *)`, `Bash(bunx *)`
-  - `pnpm-lock.yaml` → `Bash(pnpm *)`, `Bash(pnpx *)`
-  - `yarn.lock` → `Bash(yarn *)`
-  - `package-lock.json` → `Bash(npm *)`
-- **Rust** - if `Cargo.toml` exists, add `Bash(cargo *)`, `Bash(rustc *)`, `Bash(rustup *)`.
-- **Python** - if `pyproject.toml`, `setup.py`, `requirements.txt`, or `tox.ini` exists, add `Bash(python *)`, `Bash(python3 *)`, `Bash(pip *)`, `Bash(pip3 *)`, `Bash(pytest *)`, `Bash(ruff *)`, `Bash(mypy *)`, `Bash(black *)`, `Bash(uv *)`, `Bash(poetry *)`, `Bash(tox *)`.
-- **Go** - if `go.mod` exists, add `Bash(go *)`, `Bash(gofmt *)`.
-- **Ruby** - if `Gemfile` exists, add `Bash(ruby *)`, `Bash(bundle *)`, `Bash(rake *)`, `Bash(rspec *)`.
-- **Task runners** - if `Makefile` exists add `Bash(make *)`; if `justfile` / `Justfile` exists add `Bash(just *)`; if `Taskfile.yml` exists add `Bash(task *)`.
-- **From the validation commands** confirmed in step 3 - cover the leading binary of each, in case it isn't a runner already pulled in by a manifest above (e.g. `swiftlint`, custom `./scripts/check.sh` → `Bash(./scripts/check.sh *)`).
-- **Scan `package.json` `scripts`, `Makefile` targets, and any `justfile`** for additional binaries the project actually uses (e.g. `prisma`, `drizzle-kit`, `vite`, `next`, `playwright`, `storybook`, `wrangler`, `terraform`, `docker`, `docker-compose`). Add a `Bash(<binary> *)` entry for each one you spot.
+```
+Skill(specular:*)
+```
 
-Then **ask the user**: "Anything else the loop is likely to run that isn't on this list?" - codegen tools, migration runners, deployment CLIs, custom scripts under `scripts/` or `bin/`, etc. Add what they mention.
+Lets the implement loop call `/specular:work-on-issue`, `/specular:create-commit`, `/specular:create-pr` etc. without prompting. (The driver `bin/specular-ralph` is gated by inline `allowed-tools` in `implement/SKILL.md` and does not need an entry here.)
+
+#### b. Git + PR flow
+
+```
+Bash(git *)
+Bash(gh *)
+Bash(jq *)
+```
+
+Always required - the loop commits, pushes, opens a PR, and parses JSON.
+
+#### c. MCP servers
+
+- Linear is a hard dependency (already checked in step 0). Always include:
+  ```
+  mcp__plugin_linear_linear__*
+  ```
+- For other MCP servers, inspect `.mcp.json` (repo) and `~/.claude.json` (`mcpServers`). For each additional server installed, ask the user: *"The loop has access to <server>. Will sub-issues plausibly use it (testing, codegen, design refs, etc.)?"* If yes, add `mcp__<server-prefix>__*`. Common candidates:
+  - `mcp__plugin_playwright_playwright__*` - browser testing
+  - `mcp__plugin_figma_figma__*` - design references
+  - other project-specific servers
+
+#### d. Validation / build commands
+
+Derive **only** from the lint/typecheck/test commands confirmed in step 3, plus their runner. For each command, add a `Bash(<leading-binary> *)` entry. Examples:
+
+- `bun run lint`, `bun run typecheck`, `bun test` → `Bash(bun *)`, `Bash(bunx *)`
+- `cargo clippy`, `cargo test` → `Bash(cargo *)`
+- `pnpm lint`, `pnpm test` → `Bash(pnpm *)`, `Bash(pnpx *)`
+- `./scripts/check.sh` → `Bash(./scripts/check.sh *)`
+
+Skip this category entirely if step 3 declared no validation commands.
+
+Then **ask the user**: *"Anything else the loop will run that isn't covered? Codegen, migrations, deploy CLIs, custom `scripts/`?"* - add what they mention as additional `Bash(...)` entries.
+
+#### Merge and write
 
 Read `.claude/settings.json` if it exists. Merge - don't clobber - any existing `permissions.allow` array. Deduplicate. Then:
 
@@ -94,7 +125,7 @@ Read `.claude/settings.json` if it exists. Merge - don't clobber - any existing 
 - If it exists and already covers everything, say so and skip.
 - Otherwise show a diff of just the new entries being added and ask before writing.
 
-Mention to the user that this is the repo-level settings file and will be committed so their teammates share the allowlist. If they'd rather keep it user-level, point them at `~/.claude/settings.json` and let them paste it there instead. Also remind them: if the loop ever stalls on a permission prompt, re-run `/specular:setup` and add the missing binary to the list - this is meant to be iterated on, not gotten perfect on the first pass.
+Mention to the user that this is the repo-level settings file and will be committed so their teammates share the allowlist. If they'd rather keep it user-level, point them at `~/.claude/settings.json` and let them paste it there instead. Also remind them: if the loop ever stalls on a permission prompt, re-run `/specular:setup` and add the missing entry - this is meant to be iterated on, not gotten perfect on the first pass.
 
 ### 5. Done
 

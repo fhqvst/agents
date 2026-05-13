@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(specular:*)",
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(jq *)",
+      "mcp__plugin_linear_linear__*"
+    ]
+  }
+}
