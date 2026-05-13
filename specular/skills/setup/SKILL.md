@@ -86,12 +86,18 @@ Lets the implement loop call `/specular:work-on-issue`, `/specular:create-commit
 #### b. Git + PR flow
 
 ```
-Bash(git *)
-Bash(gh *)
-Bash(jq *)
+Bash(git add:*)
+Bash(git commit:*)
+Bash(git status:*)
+Bash(git diff:*)
+Bash(git log:*)
+Bash(git push:*)
+Bash(gh pr create:*)
+Bash(gh pr view:*)
+Bash(jq:*)
 ```
 
-Always required - the loop commits, pushes, opens a PR, and parses JSON.
+Always required - the loop commits, pushes, opens a PR, and parses JSON. Keep the list narrow: only the verbs the sub-skills actually invoke (see `create-commit/SKILL.md` and `create-pr/SKILL.md`). If a future sub-skill needs more (e.g. `git rebase`, `gh pr comment`), add it then.
 
 #### c. MCP servers
 
