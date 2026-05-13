@@ -1,7 +1,7 @@
 {
   "name": "specular",
   "description": "Agent-driven development workflow with Linear as the source of truth: specify, plan, and run an autonomous implement loop.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": {
     "name": "Filip Hallqvist"
   },
