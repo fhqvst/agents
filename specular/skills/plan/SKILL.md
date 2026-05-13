@@ -18,11 +18,14 @@ The parent issue identifier (e.g. `ABC-123`) is passed as `$ARGUMENTS`. If empty
 
 ### 2. Load the parent context
 
-Fetch the parent issue with `mcp__plugin_linear_linear__get_issue`. The body has a terse human-facing RFC at the top followed by a `+++ PLAN.md ... +++` collapsible produced by `/specular:specify` - the comprehensive agent-facing brief (user stories, vocabulary, implementation decisions, testing decisions, out of scope, further notes). **This is the source of truth for breaking the work down.**
+Fetch the parent issue with `mcp__plugin_linear_linear__get_issue`. The body has two parts produced by `/specular:specify`:
 
-Parse it out (Linear collapsible: content lives between the opener line `+++ PLAN.md` and the next standalone `+++` line). You can ignore the human-facing top - it's for issue reviewers, not for slicing.
+- A terse **human-facing RFC** at the top: Problem, optional Background, Proposal, Constraints (In/Out), Implementation (headline pseudocode), References.
+- A `+++ PLAN.md ... +++` collapsible at the bottom adding the agent-only detail: user stories, vocabulary, deeper implementation decisions, testing decisions, further notes.
 
-If the `+++ PLAN.md` block is missing, warn the user that the parent wasn't created with `/specular:specify` and the breakdown will be coarser; fall back to the body text.
+**The whole body is the source of truth.** Read both halves - the human-top carries the Problem, Proposal, Constraints, and Out-of-scope; the collapsible adds the rest. Parse the collapsible out of the body (content lives between the opener line `+++ PLAN.md` and the next standalone `+++` line) so you can reason about it separately when you need to.
+
+If the `+++ PLAN.md` block is missing, warn the user that the parent wasn't created with `/specular:specify` and the breakdown will be coarser; work from the human-top alone.
 
 ### 3. Explore the codebase (optional)
 

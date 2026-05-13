@@ -45,9 +45,11 @@ RIGHT (vertical):
 
 ### 1. Planning
 
-This skill runs headless - there is no user to ask. The spec is already fixed:
+This skill runs headless - there is no user to ask. The spec is already fixed. The implement loop passes in the parent's full body in two pieces: a **human-facing top** (Problem, Proposal, Constraints In/Out, headline Implementation pseudocode) and a `PLAN.md` (user stories, vocabulary, deeper implementation decisions, testing decisions). Both pieces are the brief:
 
-- **Interface changes** come from `PLAN.md` → "Implementation Decisions".
+- **Problem and proposal** come from the human-top.
+- **Out-of-scope guardrails** come from the human-top's Constraints "Out".
+- **Interface changes** come from the human-top's Implementation pseudocode plus `PLAN.md` → "Implementation Decisions" (deeper detail).
 - **Which behaviors to test** come from `PLAN.md` → "Testing Decisions" plus the sub-issue's acceptance criteria.
 - **Scope** is the single vertical slice described in the sub-issue body. Don't widen it.
 

@@ -8,7 +8,7 @@ description: Spec out a change as a Linear RFC issue. Optionally grills the user
 Produce a Linear issue with two layers:
 
 1. **Top (human-facing, terse):** Problem, optional Background, Proposal, Constraints, Implementation, References. Reviewers should be able to evaluate the direction in under a minute.
-2. **Bottom (agent-facing, comprehensive):** a single Linear `+++ PLAN.md` collapsible. `PLAN.md` is the full brief downstream skills (`/specular:plan`, `/specular:implement`) read. Duplication between the human top and `PLAN.md` is fine - they have different readers.
+2. **Bottom (agent-facing, additive):** a single Linear `+++ PLAN.md` collapsible holding what the human-top doesn't cover. Downstream skills (`/specular:plan`, `/specular:implement`) read the entire issue body - the human-top plus `PLAN.md` together are the full brief. `PLAN.md` should not restate Problem, Proposal, or Out-of-scope. The one exception is Implementation: the human-top has a high-level pseudocode glance, and `PLAN.md` goes deeper.
 
 ## 0. Confirm Linear context
 
@@ -80,21 +80,15 @@ Show the user the proposed module breakdown and ask:
 
 Iterate until they approve. Keep this lightweight.
 
-## 5. Write `PLAN.md` (the agent-facing brief)
+## 5. Write `PLAN.md` (the agent-facing addendum)
 
-This is the comprehensive, self-contained document the implementation agent will read. Write it FIRST - the human-facing sections in section 6 are derived from this.
+`PLAN.md` holds what the human-top doesn't cover. Downstream skills read the entire issue body, so don't restate the Problem, Proposal, or Out-of-scope here - they'll get those from the top. The one place restatement is welcome is Implementation: the human-top has a brief pseudocode glance, and `PLAN.md` goes deeper.
 
-Use this template:
+Write `PLAN.md` first - the human-top in section 7 is derived from it.
+
+Use this template (omit any section that has nothing useful to add):
 
 <plan-template>
-
-## Problem Statement
-
-The problem the user is facing, from the user's perspective. Concrete - name the symptom, not the cause.
-
-## Solution
-
-The solution from the user's perspective. What changes for them. No code, no file paths.
 
 ## User Stories
 
@@ -112,11 +106,11 @@ The terms introduced or refined while specifying this change. Use the same forma
 
 ## Implementation Decisions
 
-The decisions made about how to build this:
+Deeper-than-the-human-top detail on how to build this. The human-top already has the headline pseudocode; this section is for everything that didn't fit there:
 
-- Modules to build or modify (from section 4)
-- Interfaces those modules expose
-- Architectural decisions
+- Modules to build or modify (from section 4) and why each exists
+- Full interfaces those modules expose (beyond the human-top's "// New" / "// Changed" glance)
+- Architectural decisions and the tradeoffs behind them
 - Schema changes
 - API contracts
 - Specific interactions between components
@@ -128,10 +122,6 @@ Do NOT include file paths or code snippets - they go stale fast. Pseudocode Type
 - What makes a good test here (test external behavior, not implementation details)
 - Which modules will be tested (from section 4)
 - Prior art - similar tests already in the codebase to mirror
-
-## Out of Scope
-
-What this RFC explicitly does NOT cover.
 
 ## Further Notes
 
