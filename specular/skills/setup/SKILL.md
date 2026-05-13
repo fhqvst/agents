@@ -1,17 +1,17 @@
 ---
 name: setup
-description: Make sure the repo's CLAUDE.md (or AGENTS.md / GEMINI.md) tells specular which Linear team and project to file issues under and which lint/typecheck/test commands to run, and that `.claude/settings.json` pre-approves the tools the headless implement loop will need. Use when the user asks to "set up specular", configure specular, or when other specular skills report that this context is missing.
+description: Create or update the repo's `SPECULAR.md` (Linear routing + validation commands) and pre-approve the tools the headless implement loop needs in `.claude/settings.json`. Use when the user asks to "set up specular", configure specular, or when other specular skills report that this context is missing.
 ---
 
 # Setup
 
-Specular reads everything it needs from the repo's agent-instruction file (`CLAUDE.md`, `AGENTS.md`, or `GEMINI.md` - whichever the project uses). There is no separate config file.
+Specular keeps its config in a single `SPECULAR.md` at the repo root. This skill creates or updates that file and the `.claude/settings.json` allowlist. It never touches `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.
 
 This skill's job is to confirm:
 
 1. Hard dependencies are installed (Linear MCP, `git`, `gh`, `jq`).
-2. The agent-instruction file names the Linear **team** and (optionally) **project** new issues should be filed under.
-3. The agent-instruction file names the project's **lint**, **typecheck**, and **test** commands.
+2. `SPECULAR.md` at the repo root names the Linear **team** and (optionally) **project** new issues should be filed under.
+3. `SPECULAR.md` names the project's **lint**, **typecheck**, and **test** commands (when they exist).
 4. The repo's `.claude/settings.json` pre-approves the tools the headless implement loop will need.
 
 If anything is missing, offer to add it.
@@ -32,29 +32,44 @@ If any are missing, stop and tell the user exactly what's missing and how to ins
 
 Do not continue until all four are available.
 
-### 1. Find the agent-instruction file
+### 1. Read or create `SPECULAR.md`
 
-Look for `CLAUDE.md`, `AGENTS.md`, or `GEMINI.md` at the repo root, in that order. If none exists, ask which one the project wants to use and create it empty.
+Look for `SPECULAR.md` at the repo root. If it doesn't exist, you'll create it later in this skill. The expected shape:
 
-### 2. Check Linear context
+```md
+# Specular
 
-Read the file. Does it tell an agent which Linear team (and optionally project) to file new tickets under? Look for any prose along the lines of *"File Linear tickets under team X, project Y"*.
+## Linear
+
+File Linear tickets under team **<team>**, project **<project>**. Leave new tickets unassigned unless told otherwise.
+
+## Validation
+
+Run `<lint cmd>` for lint, `<typecheck cmd>` for typecheck, `<test cmd>` for tests.
+```
+
+Both sections are prose, not strict syntax - downstream skills read them with an LLM. Free-form additions (monorepo path → project routing, assignee policy, RFC label preferences, "no typechecker", etc.) are fine.
+
+### 2. Linear routing
+
+Does `SPECULAR.md` already have a `## Linear` section that names a team and project?
 
 If missing:
 
 - Use `mcp__plugin_linear_linear__list_teams` to list teams. Ask which one.
 - Use `mcp__plugin_linear_linear__list_projects` (filtered by team) to list projects. Ask which one, or "none".
-- Propose a one-line addition to the agent-instruction file, e.g.:
+- For monorepos with multiple Linear projects, ask whether routing depends on the area being changed (e.g. `auth/*` → one project, `billing/*` → another). Capture the routing rule as prose under `## Linear`.
+- Propose the section text, e.g.:
 
   > File Linear tickets under team **Platform**, project **Q2 Roadmap**. Leave new tickets unassigned unless told otherwise.
 
-  (If the user wants tickets self-assigned by default, mention that instead. If they want a specific RFC label applied, mention that too.)
+  (If the user wants tickets self-assigned by default, or a specific RFC label, capture that here too.)
 
 - Show the diff and ask before writing.
 
-### 3. Check validation commands
+### 3. Validation commands
 
-Does the file tell an agent how to lint, typecheck, and test? Look for prose like *"Run `bun run lint` to lint, `bun run typecheck` to typecheck, `bun test` to run tests."*
+Does `SPECULAR.md` already have a `## Validation` section?
 
 If missing, detect candidates from the repo (don't ask blind):
 
@@ -63,9 +78,9 @@ If missing, detect candidates from the repo (don't ask blind):
 - `pyproject.toml` / `setup.py` / `tox.ini` / `Makefile` / `justfile`
 - `bun.lockb` / `pnpm-lock.yaml` / `yarn.lock` / `package-lock.json` for the runner
 
-Propose concrete commands and let the user confirm or edit. If a category doesn't apply (no typechecker, etc.), say so explicitly so downstream skills know to skip it. Example addition:
+Propose concrete commands based on what you found, then ask the user: *"Does this look right? Anything I missed, or any commands I should drop?"* If a category doesn't apply (no typechecker, etc.), say so explicitly so downstream skills know to skip it. Example section:
 
-> Validation commands: `bun run lint` for lint, `bun run typecheck` for typecheck, `bun test` for tests. No separate end-to-end suite.
+> Run `bun run lint` for lint, `bun run typecheck` for typecheck, `bun test` for tests. No separate end-to-end suite.
 
 `/specular:implement` will run these as a hard gate before each commit.
 
@@ -110,18 +125,16 @@ Always required - the loop commits, pushes, opens a PR, and parses JSON. Keep th
   - `mcp__plugin_figma_figma__*` - design references
   - other project-specific servers
 
-#### d. Validation / build commands
+#### d. Validation + anything else the loop will run
 
-Derive **only** from the lint/typecheck/test commands confirmed in step 3, plus their runner. For each command, add a `Bash(<leading-binary> *)` entry. Examples:
+Seed the proposal from the validation commands captured in step 3. For each command, add a `Bash(<leading-binary>:*)` entry. Examples:
 
-- `bun run lint`, `bun run typecheck`, `bun test` → `Bash(bun *)`, `Bash(bunx *)`
-- `cargo clippy`, `cargo test` → `Bash(cargo *)`
-- `pnpm lint`, `pnpm test` → `Bash(pnpm *)`, `Bash(pnpx *)`
-- `./scripts/check.sh` → `Bash(./scripts/check.sh *)`
+- `bun run lint`, `bun test` → `Bash(bun:*)`, `Bash(bunx:*)`
+- `cargo clippy`, `cargo test` → `Bash(cargo:*)`
+- `pnpm lint`, `pnpm test` → `Bash(pnpm:*)`, `Bash(pnpx:*)`
+- `./scripts/check.sh` → `Bash(./scripts/check.sh:*)`
 
-Skip this category entirely if step 3 declared no validation commands.
-
-Then **ask the user**: *"Anything else the loop will run that isn't covered? Codegen, migrations, deploy CLIs, custom `scripts/`?"* - add what they mention as additional `Bash(...)` entries.
+Then **ask the user**: *"Anything else the loop will run that isn't covered? Codegen, migrations, deploy CLIs, custom `scripts/`?"* - add what they mention as additional `Bash(...:*)` entries.
 
 #### Merge and write
 
@@ -135,4 +148,4 @@ Mention to the user that this is the repo-level settings file and will be commit
 
 ### 5. Done
 
-Tell the user setup is complete and that `/specular:specify`, `/specular:plan`, and `/specular:implement` will pick up everything they need from the agent-instruction file.
+Write any pending changes to `SPECULAR.md` (showing a diff first) and tell the user setup is complete. `/specular:specify`, `/specular:plan`, and `/specular:implement` will pick up Linear routing and validation commands from `SPECULAR.md`.

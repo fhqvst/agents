@@ -21,7 +21,7 @@ The parent issue identifier (e.g. `ABC-123`) is passed as `$ARGUMENTS`. If empty
 Fetch the parent issue with `mcp__plugin_linear_linear__get_issue`. The body has two parts produced by `/specular:specify`:
 
 - A terse **human-facing RFC** at the top: Problem, optional Background, Proposal, Constraints (In/Out), Implementation (headline pseudocode), References.
-- A `+++ PLAN.md ... +++` collapsible at the bottom adding the agent-only detail: user stories, vocabulary, deeper implementation decisions, testing decisions, further notes.
+- A `+++ PLAN.md ... +++` collapsible at the bottom adding the agent-only detail: user stories, deeper implementation decisions, testing decisions, further notes.
 
 **The whole body is the source of truth.** Read both halves - the human-top carries the Problem, Proposal, Constraints, and Out-of-scope; the collapsible adds the rest. Parse the collapsible out of the body (content lives between the opener line `+++ PLAN.md` and the next standalone `+++` line) so you can reason about it separately when you need to.
 
@@ -29,7 +29,7 @@ If the `+++ PLAN.md` block is missing, warn the user that the parent wasn't crea
 
 ### 3. Explore the codebase (optional)
 
-If you have not already explored the relevant code, do so. Sub-issue titles and descriptions should use the project's domain vocabulary - assemble it from the relevant `SPECULAR.md` files (see [../specify/SPECULAR-FORMAT.md](../specify/SPECULAR-FORMAT.md)). If `PLAN.md` has a Vocabulary section, treat its terms as proposed canonical language for this change.
+If you have not already explored the relevant code, do so. Sub-issue titles and descriptions should use the project's domain vocabulary as it appears in the code and the parent issue body.
 
 ### 4. Draft vertical slices
 
@@ -42,14 +42,6 @@ Slices may be **HITL** (requires human interaction - architectural decision, des
 - A completed slice is demoable or verifiable on its own
 - Prefer many thin slices over few thick ones
 </vertical-slice-rules>
-
-#### Vocabulary slice (optional)
-
-If `PLAN.md` has a Vocabulary section that introduces new terms or sharpens existing ones, also draft a dedicated AFK slice titled "Update SPECULAR.md vocabulary". Its job is to propagate those terms into the appropriate `SPECULAR.md` file(s) - creating new ones, editing existing ones, or splitting a parent file when a deeper folder needs to override.
-
-Skip this slice if the vocabulary changes are trivial (one rename) or absent. When in doubt, include it - vocabulary debt compounds quickly.
-
-Order this slice **first** in the dependency graph if other slices use the new terminology, so subsequent commits land with the canonical vocabulary already in place.
 
 ### 5. Quiz the user
 
@@ -71,7 +63,7 @@ Iterate until the user approves.
 
 ### 6. Publish the sub-issues
 
-For each approved slice, create a Linear issue with `mcp__plugin_linear_linear__save_issue`. Set `parentId` to the parent issue identifier so it becomes a sub-issue. Set `state` to `Todo` (the slices have already been triaged through this skill). Inherit team, project, and assignee from the parent issue; if any are missing on the parent, fall back to whatever the repo's agent-instruction file (`CLAUDE.md` / `AGENTS.md` / `GEMINI.md`) specifies.
+For each approved slice, create a Linear issue with `mcp__plugin_linear_linear__save_issue`. Set `parentId` to the parent issue identifier so it becomes a sub-issue. Set `state` to `Todo` (the slices have already been triaged through this skill). Inherit team, project, and assignee from the parent issue; if any are missing on the parent, fall back to whatever `SPECULAR.md`'s `## Linear` section specifies.
 
 Mark HITL slices with a `**Type:** HITL` line in the body (see template below). AFK slices need no marker - the implement loop treats missing marker as AFK. Do not apply Linear labels for this; the body is the single source of truth.
 

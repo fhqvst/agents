@@ -10,7 +10,7 @@
 
 ## Introduction
 
-- **No clutter.** Specs live in Linear. The only repo footprint is `SPECULAR.md` glossaries that `/specular` keeps up to date.
+- **No clutter.** Specs live in Linear. The only repo footprint is a single `SPECULAR.md` at the root for Specular's own config.
 - **Three commands.** `/specular:specify` → `/specular:plan` → `/specular:implement`. No config, no hidden state.
 - **RFCs for humans.** Specs in two parts: an RFC that takes 1 minute to read + a verbose agent-facing brief in a collapsible section.
 - **Specs over vibes.** `specify` grills you until the brief is sharp enough to act on - ambiguous nouns, undefined verbs, and hand-wavy edges surfaced up front.
@@ -72,7 +72,7 @@ agent:  *builds a different wrong thing*
 4. **Drive it:**
 
    ```sh
-   /specular:setup                  # one-time per repo: configures CLAUDE.md context + Bash allowlist
+   /specular:setup                  # one-time per repo: writes SPECULAR.md config + Bash allowlist
    /specular:specify "..."          # produces a parent Linear issue (RFC) from a description, or pass an existing issue ID to sharpen it in place
    /specular:plan ABC-123           # breaks the parent into sub-issues
    /specular:implement ABC-123      # runs the loop until done, then opens a PR
@@ -87,13 +87,13 @@ Specular is a three-step pipeline against Linear. You drive each step; the agent
 
 **1. Specify.** You hand `/specular:specify` a rough idea. It grills you - poking at fuzzy terminology, undefined behavior, hidden assumptions, and missing constraints. The result is a parent Linear issue (the "RFC") with two layers: a short human-readable RFC at the top for teammates, and a verbose agent-facing brief in a collapsible at the bottom for Specular itself.
 
-**2. Plan.** `/specular:plan ABC-123` reads the RFC and slices it into vertical sub-issues. Each one is classified in its body as **AFK** (safe to implement unattended - the default, no marker needed) or **HITL** (needs you in the loop, marked with a `**Type:** HITL` line). No Linear labels involved - the body is the single source of truth. If grilling surfaced new domain terms, an "update SPECULAR.md vocabulary" sub-issue gets scheduled first so the glossary lands before any code that uses it.
+**2. Plan.** `/specular:plan ABC-123` reads the RFC and slices it into vertical sub-issues. Each one is classified in its body as **AFK** (safe to implement unattended - the default, no marker needed) or **HITL** (needs you in the loop, marked with a `**Type:** HITL` line). No Linear labels involved - the body is the single source of truth.
 
 **3. Implement.** `/specular:implement ABC-123` starts a headless loop on your machine. Each iteration: pick the next eligible AFK sub-issue → implement it test-first in a dedicated worktree → run your lint/typecheck/test as a hard gate → commit, push, transition to **Done** in Linear. Once every AFK sub-issue is done, the loop opens the PR. HITL sub-issues stay open for you to handle when you're back.
 
 The complete footprint:
 
-- **In your repo.** `CLAUDE.md` / `AGENTS.md` / `GEMINI.md` and `.claude/settings.json` are written only during `/specular:setup`, with a diff shown before each write. `SPECULAR.md` files are created or edited by the implement loop when the plan introduces new vocabulary. Source code, tests, and other implementation files are touched as part of each sub-issue's commit - same as any agent-driven change - on a dedicated worktree branch named after Linear's `branchName`.
+- **In your repo.** `SPECULAR.md` (at the repo root) and `.claude/settings.json` are written only during `/specular:setup`, with a diff shown before each write. Specular never modifies `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`. Source code, tests, and other implementation files are touched as part of each sub-issue's commit - same as any agent-driven change - on a dedicated worktree branch named after Linear's `branchName`.
 - **On Linear.** Creates the parent issue and sub-issues, and transitions sub-issues to **Done** as the loop completes them. Does **not** modify workspace settings, workflow states, teams, projects, members, integrations, labels, or any other configuration. The plugin uses the Linear MCP as a regular user; it cannot escalate beyond what you can do in the Linear UI.
 - **On GitHub.** One PR per parent issue, opened only after every AFK sub-issue is done. No comments, no labels, no other API calls.
 - **On your machine.** A git worktree as a sibling of your CWD (`../<linear-branch-name>`) for the implement loop. You remove it when you're done with the branch.
@@ -112,23 +112,33 @@ The parent Linear issue body has a fixed shape, inspired by Basecamp's Shape Up 
 - **Implementation** - high-level shape of the work, enough to plan from.
 - **References** - links: prior issues, docs, dashboards, conversations.
 
-Below that, a `PLAN.md` collapsible holds the full agent-facing brief - vocabulary from grilling, sharper invariants, anything verbose enough to drown out the human-readable RFC at the top. Teammates read the top; Specular reads the bottom.
+Below that, a `PLAN.md` collapsible holds the full agent-facing brief - sharper invariants, deeper implementation decisions, testing decisions, anything verbose enough to drown out the human-readable RFC at the top. Teammates read the top; Specular reads the bottom.
 
 ### `SPECULAR.md`
 
-A hierarchical glossary of your project's domain terms, committed to the repo and laid out exactly like `CLAUDE.md` - any folder can have one, and child definitions override their parents on conflict while non-conflicting terms accumulate up the tree.
+A single `SPECULAR.md` at the repo root holds Specular's config in prose:
 
-Specular owns this file: `/specular:specify` surfaces new vocabulary during grilling, `/specular:plan` schedules a sub-issue to propagate those terms into the appropriate `SPECULAR.md` files, and the implement loop performs the edits as part of normal sub-issue work. The glossary lands before the code that uses it, so the agent always speaks your team's language instead of inventing its own.
+```md
+# Specular
 
-It's a separate file (rather than a section in `CLAUDE.md` / `AGENTS.md`) on purpose - those files are shared real estate with whatever other agent tooling you use, and we don't want Specular to clutter them up. If you swap Specular out for a different speccing framework later, you can delete `SPECULAR.md` and your agent-instruction files are untouched.
+## Linear
 
-Format: [`skills/specify/SPECULAR-FORMAT.md`](skills/specify/SPECULAR-FORMAT.md).
+File Linear tickets under team **Platform**, project **Q2 Roadmap**. Leave new tickets unassigned unless told otherwise.
+
+## Validation
+
+Run `bun run lint` for lint, `bun run typecheck` for typecheck, `bun test` for tests.
+```
+
+`/specular:specify` and `/specular:plan` read the `## Linear` section to decide where to file issues. The implement loop reads `## Validation` and runs those commands as a hard gate before each commit. Both sections are free-form prose - monorepo path → project routing, "no typechecker", RFC label preferences, etc. all go inline.
+
+It's a separate file (rather than a section in `CLAUDE.md` / `AGENTS.md`) on purpose - those files are shared real estate with whatever other agent tooling you use, and we don't want Specular to squat on them. If you swap Specular out later, deleting `SPECULAR.md` cleanly removes its footprint.
 
 ## API
 
 ### `/specular:setup` *(one-time per repo)*
 
-Reads your repo's agent-instruction file (`CLAUDE.md` / `AGENTS.md` / `GEMINI.md`) and confirms three things: which Linear **team/project** new issues belong under, the **lint/typecheck/test commands** the implement loop should treat as a hard gate, and that `.claude/settings.json` pre-approves the Bash patterns the headless loop will need (derived from the validation commands plus a baseline of `git`, `gh`, `jq`, `claude`). Anything missing, setup offers to write in.
+Creates or updates `SPECULAR.md` at the repo root and confirms three things: which Linear **team/project** new issues belong under, the **lint/typecheck/test commands** the implement loop should treat as a hard gate, and that `.claude/settings.json` pre-approves the Bash patterns the headless loop will need (derived from the validation commands plus a baseline of `git`, `gh`, `jq`). Anything missing, setup offers to write in. Never modifies `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.
 
 ### `/specular:specify`
 
@@ -137,7 +147,7 @@ You hand it an idea - either a freeform prompt (`/specular:specify "..."`) or an
 Once the idea is sharp, Specular publishes a parent Linear issue (or rewrites the existing one in place when you passed a ticket ID):
 
 - The **top** of the body is a terse, human-facing RFC: Problem / Background / Proposal / Constraints / Implementation / References. This is what teammates read.
-- The **bottom** is a `PLAN.md` collapsible containing the full agent-facing brief, including the vocabulary surfaced during grilling. This is what Specular reads.
+- The **bottom** is a `PLAN.md` collapsible containing the full agent-facing brief: user stories, deeper implementation decisions, testing decisions. This is what Specular reads.
 
 ### `/specular:plan ABC-123`
 
@@ -145,8 +155,6 @@ Slices the parent into sub-issues. Each one is classified in its body (no Linear
 
 - **AFK** - safe to implement unattended. The implement loop will pick it up. Default - no marker in the body.
 - **HITL** - needs you in the loop (design calls, risky migrations, anything ambiguous). Marked with a `**Type:** HITL` line in the body. The loop skips these.
-
-If the plan introduced new domain terms, an "update SPECULAR.md vocabulary" sub-issue gets scheduled first so the glossary lands before the code that uses it.
 
 ### `/specular:implement ABC-123`
 

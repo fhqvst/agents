@@ -4,7 +4,7 @@ One iteration against parent issue `$PARENT`. Driver re-invokes you until you em
 
 # Pick a sub-issue
 
-Fetch `$PARENT` via Linear MCP. The body has two parts: a human-facing RFC at the top (Problem, Proposal, Constraints, headline Implementation pseudocode) and a `+++ PLAN.md ... +++` collapsible at the bottom (user stories, vocabulary, deeper implementation decisions, testing decisions). **Both halves are the brief** - the top carries Problem/Proposal/Out-of-scope, the collapsible adds the rest. Parse the collapsible out of the body (content lives between the opener line and the next standalone `+++`) so you can pass the two pieces separately to `/specular:work-on-issue`.
+Fetch `$PARENT` via Linear MCP. The body has two parts: a human-facing RFC at the top (Problem, Proposal, Constraints, headline Implementation pseudocode) and a `+++ PLAN.md ... +++` collapsible at the bottom (user stories, deeper implementation decisions, testing decisions). **Both halves are the brief** - the top carries Problem/Proposal/Out-of-scope, the collapsible adds the rest. Parse the collapsible out of the body (content lives between the opener line and the next standalone `+++`) so you can pass the two pieces separately to `/specular:work-on-issue`.
 
 List its sub-issues. Eligible = no `**Type:** HITL` line in the body AND every `blockedBy` is Done AND state is unstarted/started. Missing marker counts as AFK. Among eligible, prefer fewest open blockers, then earliest creation.
 
@@ -27,17 +27,17 @@ This loop runs headless. The user's permission allowlist matches commands by lit
 
 # Work the sub-issue
 
-Invoke `/specular:work-on-issue` with the sub-issue body, identifier, and the parent's full body as background (both the human-top and the parsed `PLAN.md` content). The agent will pick up vocabulary from `SPECULAR.md` files in the working tree itself (hierarchical, like `CLAUDE.md`).
+Invoke `/specular:work-on-issue` with the sub-issue body, identifier, and the parent's full body as background (both the human-top and the parsed `PLAN.md` content).
 
 # Validate (hard gate)
 
-The repo's agent-instruction file (`CLAUDE.md` / `AGENTS.md` / `GEMINI.md`) names the lint, typecheck, and test commands. Run each one that applies. If any fails:
+`SPECULAR.md` at the repo root names the lint, typecheck, and test commands under its `## Validation` section. Run each one that applies. If any fails:
 
 - Do NOT commit.
 - Leave a comment on the sub-issue summarising the failure (command, exit code, last ~30 lines of output).
 - End the turn without emitting the sentinel. Do not push.
 
-If the agent-instruction file doesn't mention validation commands, leave a comment on the sub-issue asking the user to run `/specular:setup` to add them, and exit without committing.
+If `SPECULAR.md` is missing or has no `## Validation` section, leave a comment on the sub-issue asking the user to run `/specular:setup` to add it, and exit without committing.
 
 Only proceed to commit when all configured validation commands pass cleanly.
 
@@ -61,6 +61,6 @@ Only when no eligible sub-issue. From the worktree, run `gh pr view --json numbe
 
 - One sub-issue per iteration. Never batch.
 - Never modify the parent (body, state, labels).
-- Validation commands from the agent-instruction file are a hard gate - never commit on a red build.
+- Validation commands from `SPECULAR.md` are a hard gate - never commit on a red build.
 - Never PR mid-loop - PR creation is terminal-only.
 - On unexpected breakage (conflicts, missing branchName, broken main): leave a comment on the sub-issue, exit. No force-push, no destroying work.

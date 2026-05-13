@@ -12,7 +12,7 @@ Produce a Linear issue with two layers:
 
 ## 0. Confirm Linear context
 
-The repo's agent-instruction file (`CLAUDE.md` / `AGENTS.md` / `GEMINI.md`) should tell you which Linear team and project to file new issues under, and whether RFCs should carry a specific label or assignee. If that prose isn't there, tell the user to run `/specular:setup` first and stop.
+`SPECULAR.md` at the repo root should tell you which Linear team and project to file new issues under, and whether RFCs should carry a specific label or assignee. If it's missing or doesn't have a `## Linear` section, tell the user to run `/specular:setup` first and stop.
 
 ## 1. Grill
 
@@ -28,7 +28,7 @@ If Playwright is available, decide whether this change ships any user-visible su
 
 If yes:
 
-1. Ask the user for the URL if it isn't in the seed prompt and you can't infer it from the agent-instruction file.
+1. Ask the user for the URL if it isn't in the seed prompt.
 2. Navigate with `browser_navigate` and capture the relevant view(s) with `browser_take_screenshot`. Resize the viewport to a representative desktop size (1440x900) first.
 3. Read the screenshot. Identify the layout primitives (rail, header, sidebar, table, etc.) before asking your first grilling question.
 
@@ -36,21 +36,12 @@ This grounds both you and the user in the same picture before grilling. The scre
 
 Skip this entirely for non-UI changes (DB migrations, infra, internal libraries, etc.) - the inference cue is the absence of UI vocabulary in the seed prompt.
 
-### Capturing vocabulary decisions
-
-Capture vocabulary decisions in memory as you go. They land in `PLAN.md` under a **Vocabulary** section (see section 4). Use the same format as the persistent glossary - see [SPECULAR-FORMAT.md](./SPECULAR-FORMAT.md).
-
-Don't write to disk during grilling. Vocabulary changes to the repo's `SPECULAR.md` files happen later: `/specular:plan` decides whether to schedule a sub-issue that updates them, and the implement loop performs the edits as part of normal sub-issue work.
-
-Don't couple the vocabulary section to implementation details. Only include terms meaningful to domain experts.
-
 ### Grilling techniques
 
-- **Explore the codebase first.** Get oriented before grilling. Read any nearby `SPECULAR.md` files (the project's hierarchical glossary) and any READMEs in the relevant module.
+- **Explore the codebase first.** Get oriented before grilling. Read READMEs in the relevant module.
 - **Sharpen fuzzy language.** Propose precise canonical terms. *"You're saying 'account' - do you mean the Customer or the User? Those are different things."*
 - **Discuss concrete scenarios.** Stress-test relationships with specific scenarios that probe edge cases.
 - **Cross-reference with code.** *"Your code cancels entire Orders, but you just said partial cancellation is possible - which is right?"*
-- **Challenge against existing SPECULAR.md files.** If the relevant folder's `SPECULAR.md` (or any ancestor) defines existing domain language, call out conflicts when the user uses a term differently.
 
 When the grilling is done, fall through to section 2.
 
@@ -86,12 +77,6 @@ A long, numbered list of user stories in the format:
 1. As an <actor>, I want a <feature>, so that <benefit>
 
 Cover all aspects of the feature - this list should be extensive.
-
-## Vocabulary
-
-(Only include this section if grilling produced new domain terms or sharpened existing ones.)
-
-The terms introduced or refined while specifying this change. Use the same format as a `SPECULAR.md` (see [SPECULAR-FORMAT.md](./SPECULAR-FORMAT.md)). `/specular:plan` reads this section to decide whether to schedule a sub-issue that propagates these terms into the appropriate `SPECULAR.md` files.
 
 ## Implementation Decisions
 
@@ -239,7 +224,7 @@ Show the composed body to the user. Ask if they want to adjust anything.
 Once approved, create the issue with `mcp__plugin_linear_linear__save_issue`:
 
 - Title: a concise summary derived from the Problem section
-- Team / project / assignee / label: per the agent-instruction file's guidance. Resolve team and project names to IDs via `mcp__plugin_linear_linear__list_teams` / `list_projects`. If the file doesn't mention an assignee, leave it unassigned. If it doesn't mention a label, skip the label.
+- Team / project / assignee / label: per `SPECULAR.md`'s `## Linear` section. Resolve team and project names to IDs via `mcp__plugin_linear_linear__list_teams` / `list_projects`. If the section doesn't mention an assignee, leave it unassigned. If it doesn't mention a label, skip the label.
 - Description: the composed body
 - `links`: if section 5 ran, attach the Figma prototype URL as `[{url, title: "Figma prototype - <feature>"}]`. Linear renders this as a preview card in the issue sidebar.
 
