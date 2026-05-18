@@ -5,12 +5,14 @@ description: Create or update the repo's `SPECULAR.md` (Linear routing) and pre-
 
 # Setup
 
-Specular keeps its config in a single `SPECULAR.md` at the repo root. This skill creates or updates that file and the `.claude/settings.json` allowlist.
+Specular keeps its config in a single `SPECULAR.md` file. This skill creates or updates that file and the `.claude/settings.json` allowlist.
+
+`SPECULAR.md` lives wherever the user runs `/specular:setup` from - by default the current working directory. That makes it work both for "file in repo root" and for parent-folder worktree layouts like `~/Development/foo/{main,branch-1,...}` where the user invokes Claude from `~/Development/foo` and wants every sibling worktree to inherit the same config. The file is found at read time by walking upward from CWD (see step 1).
 
 This skill's job is to confirm:
 
 1. Hard dependencies are installed (Linear MCP, `git`, `gh`, `jq`).
-2. `SPECULAR.md` at the repo root lists the Linear projects new issues can land in, plus any glob-based path routing for monorepos.
+2. `SPECULAR.md` lists the Linear projects new issues can land in, plus any glob-based path routing for monorepos.
 3. The repo's `.claude/settings.json` pre-approves the tools the headless implement loop will need.
 
 If anything is missing, offer to add it.
@@ -33,7 +35,11 @@ Do not continue until all four are available.
 
 ### 1. Read or create `SPECULAR.md`
 
-Look for `SPECULAR.md` at the repo root. If it doesn't exist, you'll create it later in this skill. The expected shape is a `## Linear` section with one `### <project>` subsection per Linear project this repo files into:
+To find an existing `SPECULAR.md`, start at the current working directory and walk upward, checking each directory. Stop at the first hit, or when you reach `$HOME` or the filesystem root - whichever comes first. If found, you'll update that file in place at the end of this skill.
+
+If none is found, you'll create a new `SPECULAR.md` in the **current working directory** at the end of this skill (not the repo root, not a parent - exactly where the user invoked the skill from). Show the absolute path before writing so it's obvious where it landed.
+
+The expected shape is a `## Linear` section with one `### <project>` subsection per Linear project this repo files into:
 
 ```md
 # Specular
@@ -155,4 +161,4 @@ Mention to the user that this is the repo-level settings file and will be commit
 
 ### 5. Done
 
-Write any pending changes to `SPECULAR.md` (showing a diff first) and tell the user setup is complete. `/specular:specify`, `/specular:plan`, and `/specular:implement` will pick up Linear projects and path routing from `SPECULAR.md`.
+Write any pending changes to `SPECULAR.md` (showing a diff and the absolute path first) and tell the user setup is complete. `/specular:specify`, `/specular:plan`, and `/specular:implement` will pick up Linear projects and path routing from `SPECULAR.md` by walking upward from CWD.

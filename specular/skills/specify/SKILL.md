@@ -12,7 +12,7 @@ Produce a Linear issue with two layers:
 
 ## 0. Confirm Linear context
 
-`SPECULAR.md` at the repo root lists the Linear projects this repo files into (one `### <project>` subsection each, with optional `Paths` and `Assignee`). If it's missing or doesn't have a `## Linear` section, tell the user to run `/specular:setup` first and stop.
+`SPECULAR.md` lists the Linear projects this repo files into (one `### <project>` subsection each, with optional `Paths` and `Assignee`). To find it, walk upward from the current working directory, checking each parent until you hit `SPECULAR.md` or reach `$HOME` / the filesystem root. If none is found, or the file is missing a `## Linear` section, tell the user to run `/specular:setup` first and stop.
 
 ## 1. Grill
 
