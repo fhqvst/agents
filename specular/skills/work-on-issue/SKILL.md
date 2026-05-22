@@ -108,6 +108,9 @@ After all tests pass, look for [refactor candidates](refactoring.md):
 [ ] Test describes behavior, not implementation
 [ ] Test uses public interface only
 [ ] Test would survive internal refactor
+[ ] Test asserts a concrete, independently-known result (does NOT restate the implementation)
 [ ] Code is minimal for this test
 [ ] No speculative features added
 ```
+
+**Do not add tests which simply restate the implementation.** A test that computes its expected value with the same formula the code uses, or asserts a constant equals the same constant the code returns, provides zero confidence - it passes by construction. If the only way a test could fail is a typo in the test itself, delete it. See [tests.md](tests.md) for examples.
