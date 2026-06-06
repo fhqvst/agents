@@ -51,7 +51,7 @@ End your turn. **Do NOT emit the sentinel** - more sub-issues may remain.
 
 # Terminal step
 
-Only when no eligible sub-issue. From the worktree, run `gh pr view --json number 2>/dev/null`. If it finds nothing, open the PR targeting `main` - prefer a user-defined `open-pr` skill if available, otherwise fall back to `/specular:create-pr`. If a PR already exists, skip creation. Then output exactly:
+Only when no eligible sub-issue. From the worktree, run `gh pr view --json number,state 2>/dev/null`. Only skip creation if a PR exists **and** its `state` is `OPEN`. If it finds nothing, or the most recent PR is `CLOSED`/`MERGED` (e.g. a previous PR was closed as bad), open a new PR targeting `main` - prefer a user-defined `open-pr` skill if available, otherwise fall back to `/specular:create-pr`. Then output exactly:
 
 ```
 <promise>NO MORE TASKS</promise>
