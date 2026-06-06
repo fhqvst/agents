@@ -93,7 +93,7 @@ Specular is a three-step pipeline against Linear. You drive each step; the agent
 
 The complete footprint:
 
-- **In your repo.** `SPECULAR.md` (in your repo root, or a parent folder if you keep sibling worktrees - see below) and `.claude/settings.json` are written only during `/specular:setup`, with a diff shown before each write. Specular never modifies `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`. Source code, tests, and other implementation files are touched as part of each sub-issue's commit - same as any agent-driven change - on a dedicated worktree branch named after Linear's `branchName`.
+- **In your repo.** `SPECULAR.md` (in your repo root, or a parent folder if you keep sibling worktrees - see below) and `.claude/settings.local.json` are written only during `/specular:setup`, with a diff shown before each write. Specular never modifies `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`. Source code, tests, and other implementation files are touched as part of each sub-issue's commit - same as any agent-driven change - on a dedicated worktree branch named after Linear's `branchName`.
 - **On Linear.** Creates the parent issue and sub-issues, and transitions sub-issues to **Done** as the loop completes them. Does **not** modify workspace settings, workflow states, teams, projects, members, integrations, labels, or any other configuration. The plugin uses the Linear MCP as a regular user; it cannot escalate beyond what you can do in the Linear UI.
 - **On GitHub.** One PR per parent issue, opened only after every AFK sub-issue is done. No comments, no labels, no other API calls.
 - **On your machine.** A git worktree as a sibling of your CWD (`../<linear-branch-name>`) for the implement loop. You remove it when you're done with the branch.
@@ -147,7 +147,7 @@ It's a separate file (rather than a section in `CLAUDE.md` / `AGENTS.md`) on pur
 
 ### `/specular:setup` *(one-time per repo)*
 
-Creates or updates `SPECULAR.md` (writing to the current working directory if it doesn't already exist somewhere up the tree) and confirms two things: which Linear **projects** new issues file into (plus optional **glob-based path routing** for monorepos), and that `.claude/settings.json` pre-approves the Bash patterns the headless loop will need (`git`, `gh`, `jq`, plus the project's runner like `bun` / `cargo` / `pnpm`). Anything missing, setup offers to write in. Never modifies `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.
+Creates or updates `SPECULAR.md` (writing to the current working directory if it doesn't already exist somewhere up the tree) and confirms two things: which Linear **projects** new issues file into (plus optional **glob-based path routing** for monorepos), and that `.claude/settings.local.json` pre-approves the Bash patterns the headless loop will need (`git`, `gh`, `jq`, plus the project's runner like `bun` / `cargo` / `pnpm`). Anything missing, setup offers to write in. Never modifies `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.
 
 ### `/specular:specify`
 
@@ -187,7 +187,7 @@ Intentional. Shape Up pitches are meant to be argued over by humans before any w
 
 **The loop stalled on a permission prompt. What now?**
 
-Re-run `/specular:setup` and tell it the binary that wasn't allowlisted (or just answer "yes" when it asks "anything else the loop is likely to run?"). The allowlist is meant to be iterated on - the headless loop can't ask for permission mid-flight, so any binary it reaches for has to already be in `.claude/settings.json`.
+Re-run `/specular:setup` and tell it the binary that wasn't allowlisted (or just answer "yes" when it asks "anything else the loop is likely to run?"). The allowlist is meant to be iterated on - the headless loop can't ask for permission mid-flight, so any binary it reaches for has to already be in `.claude/settings.local.json`.
 
 **Can I use Specular without Linear?**
 

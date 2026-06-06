@@ -1,11 +1,11 @@
 ---
 name: setup
-description: Create or update the repo's `SPECULAR.md` (Linear routing) and pre-approve the tools the headless implement loop needs in `.claude/settings.json`. Use when the user asks to "set up specular", configure specular, or when other specular skills report that this context is missing.
+description: Create or update the repo's `SPECULAR.md` (Linear routing) and pre-approve the tools the headless implement loop needs in `.claude/settings.local.json`. Use when the user asks to "set up specular", configure specular, or when other specular skills report that this context is missing.
 ---
 
 # Setup
 
-Specular keeps its config in a single `SPECULAR.md` file. This skill creates or updates that file and the `.claude/settings.json` allowlist.
+Specular keeps its config in a single `SPECULAR.md` file. This skill creates or updates that file and the `.claude/settings.local.json` allowlist.
 
 `SPECULAR.md` lives wherever the user runs `/specular:setup` from - by default the current working directory. That makes it work both for "file in repo root" and for parent-folder worktree layouts like `~/Development/foo/{main,branch-1,...}` where the user invokes Claude from `~/Development/foo` and wants every sibling worktree to inherit the same config. The file is found at read time by walking upward from CWD (see step 1).
 
@@ -13,7 +13,7 @@ This skill's job is to confirm:
 
 1. Hard dependencies are installed (Linear MCP, `git`, `gh`, `jq`).
 2. `SPECULAR.md` lists the Linear projects new issues can land in, plus any glob-based path routing for monorepos.
-3. The repo's `.claude/settings.json` pre-approves the tools the headless implement loop will need.
+3. The repo's `.claude/settings.local.json` pre-approves the tools the headless implement loop will need.
 
 If anything is missing, offer to add it.
 
@@ -94,7 +94,7 @@ Leave exactly one project with no `Paths` bullet - it's the catch-all. If the us
 
 `/specular:specify` matches RFC scope against `Paths` globs at file time. If nothing matches, it falls back to the project with no `Paths`.
 
-### 4. Build the `.claude/settings.json` allowlist
+### 4. Build the `.claude/settings.local.json` allowlist
 
 The implement loop runs headless (`claude --print`) and cannot surface permission prompts mid-flight - any tool call that isn't pre-approved stalls it. The allowlist is **focused, not exhaustive** - it covers the categories below and nothing else. Read-only Bash globs auto-approve since 2.1.111, so generic file utilities (`cat`, `head`, `grep`, `find`, `ls`, etc.) don't belong here.
 
@@ -151,13 +151,13 @@ Propose the entries based on what you found. Then **ask the user**: *"Anything e
 
 #### Merge and write
 
-Read `.claude/settings.json` if it exists. Merge - don't clobber - any existing `permissions.allow` array. Deduplicate. Then:
+Read `.claude/settings.local.json` if it exists. Merge - don't clobber - any existing `permissions.allow` array. Deduplicate. Then:
 
 - If the file doesn't exist, propose creating it with `{ "permissions": { "allow": [...] } }`.
 - If it exists and already covers everything, say so and skip.
 - Otherwise show a diff of just the new entries being added and ask before writing.
 
-Mention to the user that this is the repo-level settings file and will be committed so their teammates share the allowlist. If they'd rather keep it user-level, point them at `~/.claude/settings.json` and let them paste it there instead. Also remind them: if the loop ever stalls on a permission prompt, re-run `/specular:setup` and add the missing entry - this is meant to be iterated on, not gotten perfect on the first pass.
+Mention to the user that this is the project-local settings file - it's gitignored and personal to them, so it won't be committed or shared with teammates. If they'd rather share the allowlist with the whole team, point them at `.claude/settings.json` (repo-level, committed); if they'd rather apply it across all their projects, point them at `~/.claude/settings.json` - and let them paste it there instead. Also remind them: if the loop ever stalls on a permission prompt, re-run `/specular:setup` and add the missing entry - this is meant to be iterated on, not gotten perfect on the first pass.
 
 ### 5. Done
 
