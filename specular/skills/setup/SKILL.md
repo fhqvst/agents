@@ -116,13 +116,19 @@ Bash(git commit:*)
 Bash(git status:*)
 Bash(git diff:*)
 Bash(git log:*)
+Bash(git show:*)
 Bash(git push:*)
+Bash(git checkout:*)
+Bash(git restore:*)
+Bash(git clean:*)
+Bash(git rm:*)
+Bash(git worktree:*)
 Bash(gh pr create:*)
 Bash(gh pr view:*)
 Bash(jq:*)
 ```
 
-Always required - the loop commits, pushes, opens a PR, and parses JSON. Keep the list narrow: only the verbs the sub-skills actually invoke (see `create-commit/SKILL.md` and `create-pr/SKILL.md`). If a future sub-skill needs more (e.g. `git rebase`, `gh pr comment`), add it then.
+Always required - the loop commits, pushes, opens a PR, parses JSON, creates/enters its worktree, and cleans up stray changes between iterations (`git restore`/`clean`/`rm`, `git checkout`, `git show` to recall prior code). Keep the list narrow: only the verbs the sub-skills actually invoke (see `create-commit/SKILL.md` and `create-pr/SKILL.md`). If a future sub-skill needs more (e.g. `git rebase`, `gh pr comment`), add it then.
 
 #### c. MCP servers
 

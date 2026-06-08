@@ -2,7 +2,6 @@
 name: create-commit
 description: Stage and commit all current changes with a short conventional commit message. Invoked by the implement loop after a sub-issue is complete, not by users directly.
 user-invocable: false
-allowed-tools: Bash(git add *) Bash(git commit *) Bash(git status *) Bash(git diff *)
 ---
 
 # Commit
@@ -35,11 +34,10 @@ chore: rename utils to helpers
 
 ## Workflow
 
-1. Run `git diff HEAD` and `git status` to understand what changed
-2. Pick the prefix based on the nature of the changes
-3. Write the shortest accurate description possible
-4. Run:
+Run each step as its own Bash call - never chain with `&&` (the headless loop matches permissions per command).
 
-```bash
-git add -A && git commit -m "<message>"
-```
+1. Run `git diff HEAD` and `git status` to understand what changed.
+2. `git add -A` to stage everything, new files included - this makes them tracked.
+3. If the project has an autofix/format step (e.g. `bun run fix:lint`, `prettier --write .`, `cargo fmt`, `eslint --fix`), run it now, then `git add -A` again. Staging before formatting is what matters: a formatter scoped to "changed" files only sees new files once they're tracked, so this keeps newly-created files from being committed un-formatted and then reformatted (and leaked) on a later iteration.
+4. Pick the prefix and write the shortest accurate description.
+5. `git commit -m "<message>"`.

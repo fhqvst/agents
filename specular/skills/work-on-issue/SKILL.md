@@ -55,6 +55,8 @@ This skill runs headless - there is no user to ask. The spec is already fixed. T
 
 Respect ADRs in the area you're touching.
 
+Never write scratch or temp files into the working tree (no `/tmp/old.ts` stashes, no `*.bak` copies). To recall prior code, use `git show HEAD:path/to/file`. Stray files get swept into commits and leak across iterations.
+
 Before writing any code:
 
 - [ ] Identify opportunities for [deep modules](deep-modules.md) (small interface, deep implementation)
