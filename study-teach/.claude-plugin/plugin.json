@@ -1,0 +1,11 @@
+{
+  "name": "study-teach",
+  "description": "Learn anything with Claude: /teach for a single concept, /study for a stateful curriculum that sequences concepts and tracks your progress.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Filip Hallqvist"
+  },
+  "repository": "https://github.com/fhqvst/agents",
+  "license": "MIT",
+  "keywords": ["learning", "teaching", "curriculum", "education", "study"]
+}
