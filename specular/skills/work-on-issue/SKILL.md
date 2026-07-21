@@ -55,10 +55,13 @@ This skill runs headless - there is no user to ask. The spec is already fixed. T
 
 Respect ADRs in the area you're touching.
 
+**Read the repo's coding standards before writing code.** Locate them from the repo's `CLAUDE.md` / `AGENTS.md` — they commonly live in a `standards/`, `docs/`, or `.github/` tree, often with a review checklist alongside — and read the ones covering the area you're about to touch (style, testing, and the language-specific cluster). These encode rules that are not lint-enforced and not derivable from the surrounding code, so reading a neighbouring file is not a substitute. Running headless is not an excuse to skip this: nobody will catch the violation for you.
+
 Never write scratch or temp files into the working tree (no `/tmp/old.ts` stashes, no `*.bak` copies). To recall prior code, use `git show HEAD:path/to/file`. Stray files get swept into commits and leak across iterations.
 
 Before writing any code:
 
+- [ ] Read the repo's coding standards covering the area you're touching
 - [ ] Identify opportunities for [deep modules](deep-modules.md) (small interface, deep implementation)
 - [ ] Design interfaces for [testability](interface-design.md)
 - [ ] List the behaviors to test (not implementation steps), prioritizing the sub-issue's acceptance criteria
@@ -113,6 +116,22 @@ After all tests pass, look for [refactor candidates](refactoring.md):
 [ ] Test asserts a concrete, independently-known result (does NOT restate the implementation)
 [ ] Code is minimal for this test
 [ ] No speculative features added
+[ ] Comments describe the code, not the change being made
 ```
+
+## Comments
+
+You are working an issue, so every comment you write is at risk of describing *the change* rather than *the code*. The issue, the plan, and the diff are invisible to whoever opens this file next month.
+
+Before committing, re-read every comment you added and delete or rewrite any that:
+
+- **Narrate the diff** - `// now uses X`, `// previously we did Y`, `// extracted from Z so that...`, `// this fixes...`
+- **Point at transient context** - a PR, ticket id, issue, or the conversation that produced the change
+- **Point at unlanded work** - `// safe until sharding ships`, `// a later slice replaces this`. State the constraint as it holds today
+- **Repeat a rationale already stated elsewhere** - say it once, on the helper or type it describes, and let each call site carry only its own specific fact
+
+A comment earns its place by explaining something the code cannot say: a hidden constraint, a subtle invariant, an upstream bug being worked around, why an obvious simpler approach fails. Default to no comment.
+
+If the repo has its own comment or style standard, it wins over this section.
 
 **Do not add tests which simply restate the implementation.** A test that computes its expected value with the same formula the code uses, or asserts a constant equals the same constant the code returns, provides zero confidence - it passes by construction. If the only way a test could fail is a typo in the test itself, delete it. See [tests.md](tests.md) for examples.
