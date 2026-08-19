@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Create or update the repo's `SPECULAR.md` (Linear routing) and pre-approve the tools the headless implement loop needs in `.claude/settings.local.json`. Use when the user asks to "set up specular", configure specular, or when other specular skills report that this context is missing.
+description: Create or update the repo's `SPECULAR.md` (Linear routing) and pre-approve the tools the implement loop needs in `.claude/settings.local.json`. Use when the user asks to "set up specular", configure specular, or when other specular skills report that this context is missing.
 ---
 
 # Setup
@@ -11,9 +11,9 @@ Specular keeps its config in a single `SPECULAR.md` file. This skill creates or 
 
 This skill's job is to confirm:
 
-1. Hard dependencies are installed (Linear MCP, `git`, `gh`, `jq`).
+1. Hard dependencies are installed (Linear MCP, `git`, `gh`).
 2. `SPECULAR.md` lists the Linear projects new issues can land in, plus any glob-based path routing for monorepos.
-3. The repo's `.claude/settings.local.json` pre-approves the tools the headless implement loop will need.
+3. The repo's `.claude/settings.local.json` pre-approves the tools the implement loop will need.
 
 If anything is missing, offer to add it.
 
@@ -24,14 +24,14 @@ If anything is missing, offer to add it.
 The implement loop hard-requires:
 
 - **Linear MCP plugin** - probe with `mcp__plugin_linear_linear__list_teams`.
-- **`git`**, **`gh`**, **`jq`** binaries on PATH - check with `command -v git`, `command -v gh`, `command -v jq`.
+- **`git`** and **`gh`** binaries on PATH - check with `command -v git` and `command -v gh`.
 
 If any are missing, stop and tell the user exactly what's missing and how to install it:
 
 - Linear MCP: install from the Claude Code plugin marketplace (`/plugin` in the UI, or https://docs.claude.com/en/docs/claude-code/plugins).
-- `git` / `gh` / `jq`: install via the user's package manager (e.g. `brew install gh jq`).
+- `git` / `gh`: install via the user's package manager (e.g. `brew install gh`).
 
-Do not continue until all four are available.
+Do not continue until all three are available.
 
 ### 1. Read or create `SPECULAR.md`
 
@@ -96,7 +96,7 @@ Leave exactly one project with no `Paths` bullet - it's the catch-all. If the us
 
 ### 4. Build the `.claude/settings.local.json` allowlist
 
-The implement loop runs headless (`claude --print`) and cannot surface permission prompts mid-flight - any tool call that isn't pre-approved stalls it. The allowlist is **focused, not exhaustive** - it covers the categories below and nothing else. Read-only Bash globs auto-approve since 2.1.111, so generic file utilities (`cat`, `head`, `grep`, `find`, `ls`, etc.) don't belong here.
+The implement loop runs its work in subagents. Every un-approved tool call interrupts the run for a permission prompt, so pre-approving the common ones is what lets it go unattended. The allowlist is **focused, not exhaustive** - it covers the categories below and nothing else. Read-only Bash globs auto-approve since 2.1.111, so generic file utilities (`cat`, `head`, `grep`, `find`, `ls`, etc.) don't belong here.
 
 Build the proposed list from these four categories:
 
@@ -106,7 +106,7 @@ Build the proposed list from these four categories:
 Skill(specular:*)
 ```
 
-Lets the implement loop call `/specular:work-on-issue`, `/specular:create-commit`, `/specular:create-pr` etc. without prompting. (The driver `bin/specular-ralph` is gated by inline `allowed-tools` in `implement/SKILL.md` and does not need an entry here.)
+Lets the implement loop call `/specular:work-on-issue`, `/specular:create-commit`, `/specular:create-pr` etc. without prompting.
 
 #### b. Git + PR flow
 
@@ -125,10 +125,11 @@ Bash(git rm:*)
 Bash(git worktree:*)
 Bash(gh pr create:*)
 Bash(gh pr view:*)
-Bash(jq:*)
+Bash(gh repo view:*)
+Bash(git fetch:*)
 ```
 
-Always required - the loop commits, pushes, opens a PR, parses JSON, creates/enters its worktree, and cleans up stray changes between iterations (`git restore`/`clean`/`rm`, `git checkout`, `git show` to recall prior code). Keep the list narrow: only the verbs the sub-skills actually invoke (see `create-commit/SKILL.md` and `create-pr/SKILL.md`). If a future sub-skill needs more (e.g. `git rebase`, `gh pr comment`), add it then.
+Always required - the loop resolves the repo's default branch, commits, pushes, opens a PR, creates/enters its worktree, and cleans up stray changes between sub-issues (`git restore`/`clean`/`rm`, `git checkout`, `git show` to recall prior code). Keep the list narrow: only the verbs the sub-skills actually invoke (see `create-commit/SKILL.md` and `create-pr/SKILL.md`). If a future sub-skill needs more (e.g. `git rebase`, `gh pr comment`), add it then.
 
 #### c. MCP servers
 

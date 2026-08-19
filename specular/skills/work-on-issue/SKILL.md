@@ -45,7 +45,7 @@ RIGHT (vertical):
 
 ### 1. Planning
 
-This skill runs headless - there is no user to ask. The spec is already fixed. The implement loop passes in the parent's full body in two pieces: a **human-facing top** (Problem, Proposal, Constraints In/Out, headline Implementation pseudocode) and a `PLAN.md` (user stories, deeper implementation decisions, testing decisions). Both pieces are the brief:
+This skill runs inside a subagent - there is no user to ask. The spec is already fixed. The implement loop passes in the parent's full body in two pieces: a **human-facing top** (Problem, Proposal, Constraints In/Out, headline Implementation pseudocode) and a `PLAN.md` (user stories, deeper implementation decisions, testing decisions). Both pieces are the brief:
 
 - **Problem and proposal** come from the human-top.
 - **Out-of-scope guardrails** come from the human-top's Constraints "Out".
@@ -55,7 +55,7 @@ This skill runs headless - there is no user to ask. The spec is already fixed. T
 
 Respect ADRs in the area you're touching.
 
-**Read the repo's coding standards before writing code.** Locate them from the repo's `CLAUDE.md` / `AGENTS.md` — they commonly live in a `standards/`, `docs/`, or `.github/` tree, often with a review checklist alongside — and read the ones covering the area you're about to touch (style, testing, and the language-specific cluster). These encode rules that are not lint-enforced and not derivable from the surrounding code, so reading a neighbouring file is not a substitute. Running headless is not an excuse to skip this: nobody will catch the violation for you.
+**Read the repo's coding standards before writing code.** Locate them from the repo's `CLAUDE.md` / `AGENTS.md` — they commonly live in a `standards/`, `docs/`, or `.github/` tree, often with a review checklist alongside — and read the ones covering the area you're about to touch (style, testing, and the language-specific cluster). These encode rules that are not lint-enforced and not derivable from the surrounding code, so reading a neighbouring file is not a substitute. Running unattended is not an excuse to skip this: nobody will catch the violation for you.
 
 Never write scratch or temp files into the working tree (no `/tmp/old.ts` stashes, no `*.bak` copies). To recall prior code, use `git show HEAD:path/to/file`. Stray files get swept into commits and leak across iterations.
 

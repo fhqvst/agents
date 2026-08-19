@@ -35,8 +35,8 @@ agent:  *builds a different wrong thing*
   → vertical slices, each marked AFK (autonomous) or HITL (human-in-the-loop) in the issue body
 
 /specular:implement ABC-123
-  → headless loop: pick slice → TDD → lint/typecheck/test → commit → push → next
-  → opens the PR only when every AFK slice is done
+  → per slice: subagent implements (TDD) → reviewer checks it → fixer amends → push
+  → opens a draft PR once every AFK slice is done
 ```
 
 ## Contents
@@ -52,7 +52,7 @@ agent:  *builds a different wrong thing*
 ## Getting started
 
 > [!IMPORTANT]
-> The implement loop runs headless (`claude --print`) and cannot surface permission prompts mid-flight. Anything it needs to run has to be allowed up front. `/specular:setup` figures out what to allow from your project's runner (`bun`, `cargo`, etc.) and writes the allowlist for you - run it before `/specular:implement`.
+> The implement loop does its work in subagents, and every un-approved tool call interrupts it for a permission prompt. `/specular:setup` figures out what to allow from your project's runner (`bun`, `cargo`, etc.) and writes the allowlist for you - run it before `/specular:implement` if you want it to run unattended.
 
 1. **Authenticate the Linear MCP.** In Claude Code, run `/plugin`, install the Linear plugin, and sign in. Specular speaks to Linear through this MCP.
 
@@ -89,13 +89,13 @@ Specular is a three-step pipeline against Linear. You drive each step; the agent
 
 **2. Plan.** `/specular:plan ABC-123` reads the RFC and slices it into vertical sub-issues. Each one is classified in its body as **AFK** (safe to implement unattended - the default, no marker needed) or **HITL** (needs you in the loop, marked with a `**Type:** HITL` line). No Linear labels involved - the body is the single source of truth.
 
-**3. Implement.** `/specular:implement ABC-123` starts a headless loop on your machine. Each iteration: pick the next eligible AFK sub-issue → implement it test-first in a dedicated worktree → run your lint/typecheck/test as a hard gate → commit, push, transition to **Done** in Linear. Once every AFK sub-issue is done, the loop opens the PR. HITL sub-issues stay open for you to handle when you're back.
+**3. Implement.** `/specular:implement ABC-123` orchestrates a loop of subagents on your machine. It sets up one worktree for the parent, then walks the eligible AFK sub-issues in order. Each one gets a subagent that implements it test-first and runs your lint/typecheck/test as a hard gate, a second that reviews the commit against the ticket, and - only if that review found something worth acting on - a third that amends the commit. Then the orchestrator pushes and transitions the sub-issue to **Done** in Linear. Once every AFK sub-issue is done, it opens a draft PR. HITL sub-issues stay open for you to handle when you're back.
 
 The complete footprint:
 
 - **In your repo.** `SPECULAR.md` (in your repo root, or a parent folder if you keep sibling worktrees - see below) and `.claude/settings.local.json` are written only during `/specular:setup`, with a diff shown before each write. Specular never modifies `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`. Source code, tests, and other implementation files are touched as part of each sub-issue's commit - same as any agent-driven change - on a dedicated worktree branch named after Linear's `branchName`.
 - **On Linear.** Creates the parent issue and sub-issues, and transitions sub-issues to **Done** as the loop completes them. Does **not** modify workspace settings, workflow states, teams, projects, members, integrations, labels, or any other configuration. The plugin uses the Linear MCP as a regular user; it cannot escalate beyond what you can do in the Linear UI.
-- **On GitHub.** One PR per parent issue, opened only after every AFK sub-issue is done. No comments, no labels, no other API calls.
+- **On GitHub.** One draft PR per parent issue, opened only after every AFK sub-issue is done. No comments, no labels, no other API calls.
 - **On your machine.** A git worktree as a sibling of your CWD (`../<linear-branch-name>`) for the implement loop. You remove it when you're done with the branch.
 
 > [!TIP]
@@ -147,7 +147,7 @@ It's a separate file (rather than a section in `CLAUDE.md` / `AGENTS.md`) on pur
 
 ### `/specular:setup` *(one-time per repo)*
 
-Creates or updates `SPECULAR.md` (writing to the current working directory if it doesn't already exist somewhere up the tree) and confirms two things: which Linear **projects** new issues file into (plus optional **glob-based path routing** for monorepos), and that `.claude/settings.local.json` pre-approves the Bash patterns the headless loop will need (`git`, `gh`, `jq`, plus the project's runner like `bun` / `cargo` / `pnpm`). Anything missing, setup offers to write in. Never modifies `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.
+Creates or updates `SPECULAR.md` (writing to the current working directory if it doesn't already exist somewhere up the tree) and confirms two things: which Linear **projects** new issues file into (plus optional **glob-based path routing** for monorepos), and that `.claude/settings.local.json` pre-approves the Bash patterns the loop will need (`git`, `gh`, plus the project's runner like `bun` / `cargo` / `pnpm`). Anything missing, setup offers to write in. Never modifies `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.
 
 ### `/specular:specify`
 
@@ -167,13 +167,14 @@ Slices the parent into sub-issues. Each one is classified in its body (no Linear
 
 ### `/specular:implement ABC-123`
 
-The headless loop. Each iteration:
+An orchestrator that drives subagents. It creates one worktree for the parent (a sibling of your CWD, named after Linear's `branchName`), installs dependencies once, then works the eligible AFK sub-issues in order. Per sub-issue:
 
-1. Picks the next eligible AFK sub-issue.
-2. Implements it test-first, in a worktree dedicated to the parent (created as a sibling of your CWD, named after Linear's `branchName`).
-3. Runs the project's lint/typecheck/test commands as a hard gate (auto-detected from `package.json`, `Cargo.toml`, `Makefile`, etc.).
-4. Commits, pushes, and transitions the sub-issue to **Done** via the Linear MCP.
-5. Repeats until no eligible AFK sub-issues remain, then opens the PR.
+1. An **implementer** subagent builds it test-first via `/specular:work-on-issue`, runs the project's lint/typecheck/test commands as a hard gate (auto-detected from `package.json`, `Cargo.toml`, `Makefile`, etc.), and commits. It does not push.
+2. A **reviewer** subagent asks one question - does this commit deliver what the ticket asked for? The build is already green when it runs, so it's scoped to that, capped at three findings, and returns `NONE` for most slices.
+3. A **fixer** subagent runs only when there were findings. It addresses exactly those, re-runs the full validation, and amends the commit.
+4. The orchestrator pushes and transitions the sub-issue to **Done** via the Linear MCP.
+
+Subagents commit; only the orchestrator pushes. That's what makes it safe for the fixer to amend. Once no eligible sub-issues remain, the orchestrator opens a draft PR. The first failure halts the run - later slices build on earlier ones, so there's nothing useful to do past a break.
 
 ## FAQ
 
@@ -185,9 +186,9 @@ So Specular doesn't squat on shared real estate. `CLAUDE.md` / `AGENTS.md` / `GE
 
 Intentional. Shape Up pitches are meant to be argued over by humans before any work starts; Specular's RFC is meant to be skim-readable in a Linear sidebar so teammates actually read it. The verbose agent-facing material lives in the `PLAN.md` collapsible at the bottom of the issue body. See [RFC format](#rfc-format).
 
-**The loop stalled on a permission prompt. What now?**
+**The loop keeps stopping for permission prompts. What now?**
 
-Re-run `/specular:setup` and tell it the binary that wasn't allowlisted (or just answer "yes" when it asks "anything else the loop is likely to run?"). The allowlist is meant to be iterated on - the headless loop can't ask for permission mid-flight, so any binary it reaches for has to already be in `.claude/settings.local.json`.
+Re-run `/specular:setup` and tell it the binary that wasn't allowlisted (or just answer "yes" when it asks "anything else the loop is likely to run?"). The allowlist is meant to be iterated on - anything a subagent reaches for that isn't in `.claude/settings.local.json` will interrupt an otherwise unattended run.
 
 **Can I use Specular without Linear?**
 
@@ -195,14 +196,18 @@ Not currently. Linear is the source of truth for issues, plans, and status trans
 
 **Does the implement loop run on my machine or in the cloud?**
 
-On your machine, via headless Claude Code. There is no remote execution.
+On your machine, in your Claude Code session. There is no remote execution.
 
 **What happens if I `Ctrl-C` mid-loop?**
 
-The current iteration gets killed. Anything it had already committed and pushed stays, and re-running picks up where it left off.
+The running subagent gets killed. Anything already pushed and marked **Done** stays, and re-running picks up from the first sub-issue that isn't Done. A slice that was committed but not yet pushed is still sitting in the worktree - the next run re-does it.
+
+**Why does the reviewer barely ever find anything?**
+
+By design. It runs after lint, typecheck, and tests have already passed, so it only checks whether the commit does what the ticket said. Style, refactors, naming, and speculative edge cases are explicitly out of scope, and it's capped at three findings. A reviewer that always finds something just adds a fixer round to every slice.
 
 ## References
 
 - [mattpocock/skills](https://github.com/mattpocock/skills) - source for the TDD and module-design notes.
-- [ghuntley.com/loop](https://ghuntley.com/loop) - source for the headless loop pattern (and the `ralph` name).
+- [ghuntley.com/loop](https://ghuntley.com/loop) - source for the loop pattern this started as (the `ralph` loop).
 - [basecamp.com/shapeup](https://basecamp.com/shapeup) - source for the RFC structure (compressed for skim-readability).

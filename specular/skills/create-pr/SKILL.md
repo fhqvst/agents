@@ -2,14 +2,19 @@
 name: create-pr
 description: Create a GitHub pull request using gh CLI with a short summary. Invoked by the implement loop in its terminal step, not by users directly.
 user-invocable: false
-allowed-tools: Bash(git push *) Bash(git log *) Bash(git diff *) Bash(gh pr create *) Bash(gh pr view *)
+allowed-tools: Bash(git push *) Bash(git log *) Bash(git diff *) Bash(gh pr create *) Bash(gh pr view *) Bash(gh repo view *)
 ---
 
 # Open PR
 
 ## Instructions
 
-1. Determine the base branch. Default to `main` unless the user specifies another.
+1. Determine the base branch. Use the one you were given if the caller passed one. Otherwise detect it - don't assume `main`:
+
+```bash
+gh repo view --json defaultBranchRef --jq .defaultBranchRef.name
+```
+
 2. Run `git log --oneline <base>..HEAD` and `git diff <base>...HEAD --stat` to understand what changed.
 3. Write a PR body using this exact structure:
 
