@@ -19,7 +19,7 @@ Fetch the parent via Linear MCP. Its body has two halves and **both are the brie
 
 Then fetch the sub-issue. That body is what you implement; the parent is background.
 
-Read the repo's own standards (`CLAUDE.md`, `AGENTS.md`, and anything they point at) and follow them.
+The repo's root `CLAUDE.md` is already in your context - the harness loads it at spawn. Do not `cat` it again, and do not read `AGENTS.md` (it is usually the same file). Follow the standards docs it points at, reading only the ones that cover the area you are about to touch.
 
 ## 3. Implement
 
@@ -41,12 +41,18 @@ Prefer a user-defined `commit` skill if one exists; otherwise `/specular:create-
 
 On unexpected breakage (conflicts, broken base branch, missing files): comment on the sub-issue and return `FAILED`. Never force-push, reset, or delete work to get unstuck.
 
+## Budget
+
+Every turn re-reads your whole context, so cost is turns times context. Keep both down:
+
+- Chain related commands with `&&` when it saves a round trip. The loop runs under auto mode; one command per call is not required.
+- During red-green, run only the test file you are working in. The full suite runs once, at the gate.
+- Read a file once. Do not re-`cat` something already in your context.
+- Hard stop: if you are past roughly 120 tool calls and the gate is not green, stop. Comment on the sub-issue with where you got stuck and return `FAILED`. A slice that needs more than that is mis-sized, and grinding on burns far more than restarting.
+
 ## Bash hygiene
 
-Permissions match commands by literal prefix, so:
-
 - Never `git -C <path> ...`. You already `cd`'d in; run bare `git ...`.
-- Never chain with `&&`, `;`, or `|`. One command per Bash call.
 - Use relative paths inside the worktree.
 
 ## Return

@@ -34,7 +34,7 @@ chore: rename utils to helpers
 
 ## Workflow
 
-Run each step as its own Bash call - never chain with `&&` (permissions match commands by literal prefix).
+Chain steps with `&&` where it saves a round trip; the loop runs under auto mode.
 
 1. Run `git diff HEAD` and `git status` to understand what changed.
 2. `git add -A` to stage everything, new files included - this makes them tracked.
