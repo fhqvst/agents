@@ -34,8 +34,6 @@ chore: rename utils to helpers
 
 ## Workflow
 
-Chain steps with `&&` where it saves a round trip; the loop runs under auto mode.
-
 1. Run `git diff HEAD` and `git status` to understand what changed.
 2. `git add -A` to stage everything, new files included - this makes them tracked.
 3. If the project has an autofix/format step (e.g. `bun run fix:lint`, `prettier --write .`, `cargo fmt`, `eslint --fix`), run it now, then `git add -A` again. Staging before formatting is what matters: a formatter scoped to "changed" files only sees new files once they're tracked, so this keeps newly-created files from being committed un-formatted and then reformatted (and leaked) on a later iteration.

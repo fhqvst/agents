@@ -96,7 +96,7 @@ Leave exactly one project with no `Paths` bullet - it's the catch-all. If the us
 
 ### 4. Build the `.claude/settings.local.json` allowlist
 
-The implement loop runs its work in subagents. Every un-approved tool call interrupts the run for a permission prompt, so pre-approving the common ones is what lets it go unattended. Running the loop under auto mode is what makes chained `&&` commands pass; the allowlist below covers the default mode. The allowlist is **focused, not exhaustive** - it covers the categories below and nothing else. Read-only Bash globs auto-approve since 2.1.111, so generic file utilities (`cat`, `head`, `grep`, `find`, `ls`, etc.) don't belong here.
+The implement loop runs its work in subagents. Every un-approved tool call interrupts the run for a permission prompt, so pre-approving the common ones is what lets it go unattended. The allowlist is **focused, not exhaustive** - it covers the categories below and nothing else. Read-only Bash globs auto-approve since 2.1.111, so generic file utilities (`cat`, `head`, `grep`, `find`, `ls`, etc.) don't belong here.
 
 Build the proposed list from these four categories:
 

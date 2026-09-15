@@ -45,7 +45,6 @@ On unexpected breakage (conflicts, broken base branch, missing files): comment o
 
 Every turn re-reads your whole context, so cost is turns times context. Keep both down:
 
-- Chain related commands with `&&` when it saves a round trip. The loop runs under auto mode; one command per call is not required.
 - During red-green, run only the test file you are working in. The full suite runs once, at the gate.
 - Read a file once. Do not re-`cat` something already in your context.
 - Hard stop: if you are past roughly 120 tool calls and the gate is not green, stop. Comment on the sub-issue with where you got stuck and return `FAILED`. A slice that needs more than that is mis-sized, and grinding on burns far more than restarting.

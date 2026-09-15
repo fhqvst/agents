@@ -80,7 +80,7 @@ Returns `FIXED <IDENT> <new-sha> <summary>` or `FAILED <IDENT> <reason>`. `FAILE
 
 Only now, once the commit has settled:
 
-1. `cd <worktree> && git push -u origin <branch>`.
+1. From the worktree, `git push -u origin <branch>`.
 2. Transition the sub-issue to **Done** via `mcp__plugin_linear_linear__save_issue`. Look the team's Done state id up once with `mcp__plugin_linear_linear__list_issue_statuses` and reuse it for the rest of the run. We do this by hand because Linear's GitHub automation isn't always wired up.
 
 ## 5. Open the draft PR
