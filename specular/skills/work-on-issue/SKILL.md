@@ -55,7 +55,7 @@ This skill runs inside a subagent - there is no user to ask. The spec is already
 
 Respect ADRs in the area you're touching.
 
-**Read the repo's coding standards before writing code.** Locate them from the repo's `CLAUDE.md` / `AGENTS.md` — they commonly live in a `standards/`, `docs/`, or `.github/` tree, often with a review checklist alongside — and read the ones covering the area you're about to touch (style, testing, and the language-specific cluster). These encode rules that are not lint-enforced and not derivable from the surrounding code, so reading a neighbouring file is not a substitute. Running unattended is not an excuse to skip this: nobody will catch the violation for you.
+**Read the repo's coding standards before writing code.** The root `CLAUDE.md` is already in your context; do not `cat` it or `AGENTS.md` again. It points at where the standards live - commonly a `standards/`, `docs/`, or `.github/` tree, often with a review checklist alongside. Read only the docs covering the area you're about to touch (style, testing, and the language-specific cluster). These encode rules that are not lint-enforced and not derivable from the surrounding code, so reading a neighbouring file is not a substitute. Running unattended is not an excuse to skip this: nobody will catch the violation for you.
 
 Never write scratch or temp files into the working tree (no `/tmp/old.ts` stashes, no `*.bak` copies). To recall prior code, use `git show HEAD:path/to/file`. Stray files get swept into commits and leak across iterations.
 
@@ -91,6 +91,7 @@ GREEN: Minimal code to pass → passes
 Rules:
 
 - One test at a time
+- Run only the test file you're working in; the full suite runs once at the gate
 - Only enough code to pass current test
 - Don't anticipate future tests
 - Keep tests focused on observable behavior

@@ -26,10 +26,7 @@ If validation fails and you can't get it green: do **not** amend. Leave a commen
 
 ## Bash hygiene
 
-Permissions match commands by literal prefix, so:
-
 - Never `git -C <path> ...`. You already `cd`'d in; run bare `git ...`.
-- Never chain with `&&`, `;`, or `|`. One command per Bash call.
 - Use relative paths inside the worktree.
 
 ## Return

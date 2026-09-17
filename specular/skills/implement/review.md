@@ -18,7 +18,7 @@ This is **not** a general code review. Lint, typecheck, and tests already passed
 1. `cd <Worktree>` as its own Bash call.
 2. Fetch the sub-issue via Linear MCP. Its body is the bar you measure against - not your own taste.
 3. `git show <Commit> --stat`, then read the diff.
-4. Read the repo's standards (`CLAUDE.md`, `AGENTS.md`, and anything they point at).
+4. The root `CLAUDE.md` is already in your context; do not `cat` it or `AGENTS.md`. Read only the standards docs it points at that cover the changed files.
 
 ## What blocks
 
