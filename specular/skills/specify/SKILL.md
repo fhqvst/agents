@@ -14,6 +14,17 @@ Produce a Linear issue with two layers:
 
 `SPECULAR.md` lists the Linear projects this repo files into (one `### <project>` subsection each, with optional `Paths` and `Assignee`). To find it, walk upward from the current working directory, checking each parent until you hit `SPECULAR.md` or reach `$HOME` / the filesystem root. If none is found, or the file is missing a `## Linear` section, tell the user to run `/specular:setup` first and stop.
 
+### Inherit the pitch
+
+Resolve the target project now (the routing rules are in section 8) and fetch it with `mcp__plugin_linear_linear__get_project`. If its description holds a `+++ BRIEF.md` collapsible, it was written by `/specular:pitch` and is the parent brief for this RFC. Read the whole description before grilling:
+
+- **Decisions** and **No-gos** are settled. Don't re-ask them; cite them when a question would otherwise arise.
+- **Vocabulary** is the canonical language. Use it in the RFC.
+- **Where the obvious approach is wrong** lists forks with the chosen path. Carry the relevant ones into the RFC's Constraints and PLAN.md.
+- If the seed prompt matches a line in **Suggested first cut**, that line plus the breadboard in the project's Solution is your starting point. If a `## Prototype` section exists, open the link and look at the boards for this item before grilling.
+
+Grilling then starts from what the pitch left open, which is the interface-level detail the pitch deliberately stopped short of.
+
 ## 1. Grill
 
 Interview the user relentlessly about every aspect of this plan until you reach a shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one. For each question, provide your recommended answer.
