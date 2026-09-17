@@ -11,8 +11,9 @@
 ## Introduction
 
 - **No clutter.** Specs live in Linear. The only footprint is a single `SPECULAR.md` (in your repo root, or a parent folder if you keep sibling worktrees) for Specular's own config.
-- **Three commands.** `/specular:specify` → `/specular:plan` → `/specular:implement`. No config, no hidden state.
-- **RFCs for humans.** Specs in two parts: an RFC that takes 1 minute to read + a verbose agent-facing brief in a collapsible section.
+- **Five commands.** `/specular:pitch` → `/specular:prototype` → `/specular:specify` → `/specular:plan` → `/specular:implement`. No config, no hidden state.
+- **Pitches and RFCs for humans.** Everything in two parts: a top that takes 1 minute to read + a verbose agent-facing brief in a collapsible section.
+- **Prototypes from real tokens.** `prototype` looks at the running app, then builds a clickable Artifact from the repo's own theme and component class strings, so reviewers react to something that looks like the product.
 - **Specs over vibes.** `specify` grills you until the brief is sharp enough to act on - ambiguous nouns, undefined verbs, and hand-wavy edges surfaced up front.
 
 #### Without Specular
@@ -27,6 +28,14 @@ agent:  *builds a different wrong thing*
 #### With Specular
 
 ```text
+/specular:pitch "users can't manage their API keys"
+  → looks at the app, grills at breadboard altitude: which places? which affordances? where is the default wrong?
+  → Linear project published: one-minute pitch on top, agent-facing BRIEF.md below
+
+/specular:prototype P-ENG-42
+  → rebuilds the current screen from the repo's theme + components, then one board per place in the breadboard
+  → clickable Artifact linked from the project
+
 /specular:specify "add notifications somewhere"
   → grilling: which event? which user? in-app or email? batched or instant?
   → Linear RFC published with sharp language and an agent-facing PLAN.md
@@ -43,6 +52,7 @@ agent:  *builds a different wrong thing*
 
 - [Getting started](#getting-started)
 - [How it works](#how-it-works)
+  - [Pitch format](#pitch-format)
   - [RFC format](#rfc-format)
   - [`SPECULAR.md`](#specularmd)
 - [API](#api)
@@ -73,6 +83,8 @@ agent:  *builds a different wrong thing*
 
    ```sh
    /specular:setup                  # one-time per repo: writes SPECULAR.md config + Bash allowlist
+   /specular:pitch "..."            # shapes a Linear project (pitch + BRIEF.md) from a description, or pass a project ID to sharpen it in place
+   /specular:prototype P-ENG-42     # builds a clickable Artifact from the pitch and links it from the project
    /specular:specify "..."          # produces a parent Linear issue (RFC) from a description, or pass an existing issue ID to sharpen it in place
    /specular:plan ABC-123           # breaks the parent into sub-issues
    /specular:implement ABC-123      # runs the loop until done, then opens a PR
@@ -83,9 +95,13 @@ agent:  *builds a different wrong thing*
 
 ## How it works
 
-Specular is a three-step pipeline against Linear. You drive each step; the agent only writes what's already been approved on the previous one.
+Specular is a five-step pipeline against Linear. You drive each step; the agent only writes what's already been approved on the previous one. The first two steps are for project-sized work and are optional - `specify` works fine on its own for a single change.
 
-**1. Specify.** You hand `/specular:specify` a rough idea. It grills you - poking at fuzzy terminology, undefined behavior, hidden assumptions, and missing constraints. The result is a parent Linear issue (the "RFC") with two layers: a short human-readable RFC at the top for teammates, and a verbose agent-facing brief in a collapsible at the bottom for Specular itself.
+**0. Pitch.** You hand `/specular:pitch` a rough idea or an existing project. If the work touches UI it opens the running app first, since you can't shape a screen you haven't seen. Then it grills you at breadboard altitude - places, affordances, actors, states, the forks where an implementer's default would be wrong - and publishes a Linear **project** whose description is a one-minute pitch on top and an agent-facing `BRIEF.md` collapsible below. No time boxes or estimates: implementation is done by agents, so the only constraint on scope is what can be verified.
+
+**0b. Prototype.** `/specular:prototype P-ENG-42` reads the pitch, walks the same screens, and builds a clickable Artifact: the current screen rebuilt from the repo's real theme tokens and shadcn class strings as a calibration board, then one board per place in the breadboard. It adds nothing the pitch didn't ask for; gaps become open questions on the project, not decisions. The Artifact URL is linked from the project and inserted as a `## Prototype` section.
+
+**1. Specify.** You hand `/specular:specify` a rough idea, or one of the seeds from a pitch's *Suggested first cut*. When the target project carries a `BRIEF.md`, its decisions and vocabulary are inherited and never re-asked. It grills you - poking at fuzzy terminology, undefined behavior, hidden assumptions, and missing constraints. The result is a parent Linear issue (the "RFC") with two layers: a short human-readable RFC at the top for teammates, and a verbose agent-facing brief in a collapsible at the bottom for Specular itself.
 
 **2. Plan.** `/specular:plan ABC-123` reads the RFC and slices it into vertical sub-issues. Each one is classified in its body as **AFK** (safe to implement unattended - the default, no marker needed) or **HITL** (needs you in the loop, marked with a `**Type:** HITL` line). No Linear labels involved - the body is the single source of truth.
 
@@ -100,6 +116,19 @@ The complete footprint:
 
 > [!TIP]
 > For the commit and PR steps, the loop prefers a user-defined `commit` or `open-pr` skill if one is available (e.g. in `~/.claude/skills/` or `.claude/skills/`), and falls back to Specular's bundled defaults otherwise. If you already have your own conventions wired up as skills, Specular will just use them.
+
+### Pitch format
+
+A Linear project description written by `/specular:pitch`. Shape Up's pitch, minus the appetite - agents do the building, so time is not the constraint, verification is:
+
+- **Problem** - a specific story with the number in it.
+- **Solution** - one sentence, then a breadboard: places, affordances per place, connections. Then the actual copy for the strings that matter.
+- **Prototype** - added by `/specular:prototype`: the Artifact link and any open questions prototyping surfaced.
+- **How we'll know** - the metric, its current value and target, the flag, a two-line demo script per item.
+- **Where the obvious approach is wrong** - one line per fork: the default an implementer would pick, and the path chosen instead.
+- **No-gos** - what is explicitly out.
+
+Below that, a `BRIEF.md` collapsible holds the agent-facing material: vocabulary, current state, the decisions log from grilling, scenarios, the URLs to look at, and a suggested first cut of RFC seeds. `/specular:prototype` and `/specular:specify` read it; teammates read the top.
 
 ### RFC format
 
@@ -137,7 +166,20 @@ Example contents:
 ### SDK (`<project-id>`)
 
 - Paths: `packages/sdk/**`
+
+## App
+
+- Dev: `cd apps/web && bun run dev`
+- URL: `http://localhost:3000`
+
+## Design
+
+- Theme: `packages/web-ui/src/theme.css`
+- Components: `packages/web-ui/src`
+- Fonts: `packages/web-ui/src/fonts`
 ```
+
+`## App` and `## Design` are optional and only matter for UI work. `/specular:pitch` and `/specular:prototype` start the dev server from `Dev` and open `URL` in the in-app browser; `/specular:prototype` reads the theme tokens and component sources from `Design` so the boards use the real class strings. `/specular:setup` detects both from the frontend app's `package.json` and shadcn's `components.json`, and confirms before writing.
 
 `/specular:specify` and `/specular:plan` read the `## Linear` section to decide where to file issues. Each `###` subsection is one Linear project; `Paths` are the globs it owns. The project with no `Paths` is the implicit catch-all when nothing matches. The implement loop detects lint/typecheck/test commands per project (from `package.json`, `Cargo.toml`, etc.) and runs them as a hard gate before each commit - no need to declare them here.
 
@@ -147,7 +189,17 @@ It's a separate file (rather than a section in `CLAUDE.md` / `AGENTS.md`) on pur
 
 ### `/specular:setup` *(one-time per repo)*
 
-Creates or updates `SPECULAR.md` (writing to the current working directory if it doesn't already exist somewhere up the tree) and confirms two things: which Linear **projects** new issues file into (plus optional **glob-based path routing** for monorepos), and that `.claude/settings.local.json` pre-approves the Bash patterns the loop will need (`git`, `gh`, plus the project's runner like `bun` / `cargo` / `pnpm`). Anything missing, setup offers to write in. Never modifies `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.
+Creates or updates `SPECULAR.md` (writing to the current working directory if it doesn't already exist somewhere up the tree) and confirms two things: which Linear **projects** new issues file into (plus optional **glob-based path routing** for monorepos), and that `.claude/settings.local.json` pre-approves the Bash patterns the loop will need (`git`, `gh`, plus the project's runner like `bun` / `cargo` / `pnpm`). Anything missing, setup offers to write in. For repos with a UI it also records how to start the app and where the theme and components live (`## App` / `## Design`), and writes a `specular-app` entry to `.claude/launch.json` so the in-app browser can start the dev server by name. Never modifies `CLAUDE.md` / `AGENTS.md` / `GEMINI.md`.
+
+### `/specular:pitch`
+
+You hand it an idea (`/specular:pitch "..."`) or an existing Linear project reference to sharpen in place. If the work touches UI it starts the app and looks at every screen involved before asking anything. Then it grills you one level above `specify`: places, affordances, actors, states, copy, how success is verified, and every fork where an implementer's default would be wrong. It never asks about interfaces, files, estimates, or time.
+
+The result is a Linear **project** whose description is the [pitch format](#pitch-format): a one-minute human top and a `BRIEF.md` collapsible carrying the decisions log, scenarios, the URLs to look at, and a suggested first cut of RFC seeds for `specify`.
+
+### `/specular:prototype P-ENG-42`
+
+Reads the project's pitch and `BRIEF.md`, starts the app, and walks the *Look at* list to calibrate. Builds a kit from the repo's theme file and component sources - the real CSS variables and shadcn class strings, Tailwind loaded from a CDN - and publishes a single Artifact: the current screen rebuilt as a calibration board, then one board per place in the breadboard, with the breadboard's connections wired as clicks. It verifies the calibration board against the real screenshot and fixes drift before moving on. The breadboard is the spec: the prototype adds no affordances of its own, and anything the pitch left unspecified becomes an open question in the new `## Prototype` section rather than an invented detail.
 
 ### `/specular:specify`
 

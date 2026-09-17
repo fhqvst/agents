@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Create or update the repo's `SPECULAR.md` (Linear routing) and pre-approve the tools the implement loop needs in `.claude/settings.local.json`. Use when the user asks to "set up specular", configure specular, or when other specular skills report that this context is missing.
+description: Create or update the repo's `SPECULAR.md` (Linear routing, plus the app and design context that pitch and prototype need) and pre-approve the tools the implement loop needs in `.claude/settings.local.json`. Use when the user asks to "set up specular", configure specular, or when other specular skills report that this context is missing.
 ---
 
 # Setup
@@ -13,7 +13,8 @@ This skill's job is to confirm:
 
 1. Hard dependencies are installed (Linear MCP, `git`, `gh`).
 2. `SPECULAR.md` lists the Linear projects new issues can land in, plus any glob-based path routing for monorepos.
-3. The repo's `.claude/settings.local.json` pre-approves the tools the implement loop will need.
+3. `SPECULAR.md` records how to run the app and where the design system lives, so `/specular:pitch` and `/specular:prototype` can look at the real UI and build with the real tokens.
+4. The repo's `.claude/settings.local.json` pre-approves the tools the implement loop will need.
 
 If anything is missing, offer to add it.
 
@@ -94,7 +95,58 @@ Leave exactly one project with no `Paths` bullet - it's the catch-all. If the us
 
 `/specular:specify` matches RFC scope against `Paths` globs at file time. If nothing matches, it falls back to the project with no `Paths`.
 
-### 4. Build the `.claude/settings.local.json` allowlist
+### 4. App and design context
+
+Only needed when the repo ships a UI. If `SPECULAR.md` already has both `## App` and `## Design`, skip. If the repo has no frontend, skip and say so.
+
+`/specular:pitch` and `/specular:prototype` look at the running app in the in-app browser, and `/specular:prototype` builds its boards from the repo's real theme tokens and component class strings. Both read these two sections:
+
+```md
+## App
+
+- Dev: `cd apps/web && bun run dev`
+- URL: `http://localhost:3000`
+
+## Design
+
+- Theme: `packages/ui/src/theme.css`
+- Components: `packages/ui/src`
+- Fonts: `packages/ui/src/fonts`
+```
+
+Rules:
+
+- `Dev` is a single shell command that starts the dev server from the directory `SPECULAR.md` lives in. In a parent-folder worktree layout that means it starts with `cd <trunk>/...`.
+- `URL` is the origin only, no path.
+- `Theme` is the CSS file that defines the design tokens (`:root` / `.dark` variables and `@theme` blocks).
+- `Components` is the directory the prototype reads component sources from - the shadcn `ui` folder and any composite components next to it.
+- `Fonts` is optional: a directory of `.woff2` files the prototype may publish so text renders in the brand face. Set it only for open-licensed fonts. If the directory carries a license notice saying the fonts are commercial or must not be copied to a CDN, leave `Fonts` out - the prototype substitutes an open face and says so.
+
+Detect candidates, then confirm each with the user - never write an unconfirmed path:
+
+- **Dev + URL:** find the frontend app (`next`, `vite`, `remix`, or similar in a `package.json`); read its `dev` / `start:dev` script and the port it passes. Recommend the command and the URL.
+- **Theme + Components:** search for shadcn's `components.json` outside `node_modules`. Its `tailwind.css` field names the theme file, resolved relative to the directory holding `components.json`, or its parent if that doesn't exist. Its `aliases.ui` names the ui folder relative to the package's source root. Recommend the source root as `Components`.
+- **Fonts:** look for `.woff2` files under the components package. Read any `LICENSE*` file next to them first. Recommend the directory only when the fonts are open-licensed and there is exactly one directory; otherwise omit and tell the user why.
+
+Then write `.claude/launch.json` next to `SPECULAR.md` so the browser pane can start the app by name:
+
+```json
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "specular-app",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "<Dev command>"],
+      "port": <port from URL>
+    }
+  ]
+}
+```
+
+Merge with an existing `launch.json` rather than clobbering it; only the `specular-app` entry is Specular's.
+
+### 5. Build the `.claude/settings.local.json` allowlist
 
 The implement loop runs its work in subagents. Every un-approved tool call interrupts the run for a permission prompt, so pre-approving the common ones is what lets it go unattended. The allowlist is **focused, not exhaustive** - it covers the categories below and nothing else. Read-only Bash globs auto-approve since 2.1.111, so generic file utilities (`cat`, `head`, `grep`, `find`, `ls`, etc.) don't belong here.
 
@@ -140,6 +192,7 @@ Always required - the loop resolves the repo's default branch, commits, pushes, 
 - For other MCP servers, inspect `.mcp.json` (repo) and `~/.claude.json` (`mcpServers`). For each additional server installed, ask the user: *"The loop has access to <server>. Will sub-issues plausibly use it (testing, codegen, design refs, etc.)?"* If yes, add `mcp__<server-prefix>__*`. Common candidates:
   - `mcp__plugin_playwright_playwright__*` - browser testing
   - `mcp__plugin_figma_figma__*` - design references
+  - `mcp__Claude_Browser__*` - the in-app browser `/specular:pitch` and `/specular:prototype` use to look at the app
   - other project-specific servers
 
 #### d. Project runners and anything else the loop will run
@@ -166,6 +219,6 @@ Read `.claude/settings.local.json` if it exists. Merge - don't clobber - any exi
 
 Mention to the user that this is the project-local settings file - it's gitignored and personal to them, so it won't be committed or shared with teammates. If they'd rather share the allowlist with the whole team, point them at `.claude/settings.json` (repo-level, committed); if they'd rather apply it across all their projects, point them at `~/.claude/settings.json` - and let them paste it there instead. Also remind them: if the loop ever stalls on a permission prompt, re-run `/specular:setup` and add the missing entry - this is meant to be iterated on, not gotten perfect on the first pass.
 
-### 5. Done
+### 6. Done
 
-Write any pending changes to `SPECULAR.md` (showing a diff and the absolute path first) and tell the user setup is complete. `/specular:specify`, `/specular:plan`, and `/specular:implement` will pick up Linear projects and path routing from `SPECULAR.md` by walking upward from CWD.
+Write any pending changes to `SPECULAR.md` (showing a diff and the absolute path first) and tell the user setup is complete. `/specular:pitch`, `/specular:prototype`, `/specular:specify`, `/specular:plan`, and `/specular:implement` will pick up Linear projects, path routing, and the app and design context from `SPECULAR.md` by walking upward from CWD.
