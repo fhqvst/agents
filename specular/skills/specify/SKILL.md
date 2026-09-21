@@ -21,7 +21,7 @@ Resolve the target project now (the routing rules are in section 8) and fetch it
 - **Decisions** and **No-gos** are settled. Don't re-ask them; cite them when a question would otherwise arise.
 - **Vocabulary** is the canonical language. Use it in the RFC.
 - **Where the obvious approach is wrong** lists forks with the chosen path. Carry the relevant ones into the RFC's Constraints and PLAN.md.
-- If the seed prompt matches a line in **Suggested first cut**, that line plus the breadboard in the project's Solution is your starting point. If a `## Prototype` section exists, open the link and look at the boards for this item before grilling.
+- If the seed prompt matches a line in **Suggested first cut**, that line plus the Breadboard in `BRIEF.md` is your starting point. If a `## Prototype` section exists, open the link and look at the boards for this item before grilling.
 
 Grilling then starts from what the pitch left open, which is the interface-level detail the pitch deliberately stopped short of.
 
