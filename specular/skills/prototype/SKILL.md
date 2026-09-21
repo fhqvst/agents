@@ -23,12 +23,12 @@ If either section is missing, tell the user to run `/specular:setup` and stop.
 
 `$ARGUMENTS` is a Linear project reference. Fetch it with `mcp__plugin_linear_linear__get_project`.
 
-The description has two parts written by `/specular:pitch`: the human top and a `+++ BRIEF.md ... +++` collapsible. Read both. From them extract:
+The description has two parts written by `/specular:pitch`: the human top (Problem, Solution, How we'll know) and a `+++ BRIEF.md ... +++` collapsible. Read both. The top tells you what the change is for; everything the boards are built from is in `BRIEF.md`:
 
-- **Places, affordances, connections** from the Solution's breadboard. One board per place.
-- **Copy** from the Solution: use it verbatim.
+- **Breadboard**: places, affordances, connections. One board per place.
+- **Copy**: use it verbatim.
 - **Where the obvious approach is wrong** and **No-gos**: constraints on what the boards may show.
-- **Look at** from `BRIEF.md`: the URLs to visit in section 2.
+- **Look at**: the URLs to visit in section 2.
 - **Vocabulary**: use these nouns in labels.
 
 If there is no `+++ BRIEF.md` block, warn that the project wasn't written with `/specular:pitch` and ask the user for the list of places and the URL to look at before continuing.
@@ -77,7 +77,7 @@ One HTML file. Structure:
 
 Wire the connections: each affordance that the breadboard connects to a place becomes a click that switches to that board. Affordances with no connection do nothing. Do not add hover states, toasts, or transitions the pitch didn't mention.
 
-Fill the boards with realistic data in the app's own vocabulary - real-looking symbols, plausible dates, the actual copy from the Solution. Cover the states the pitch names: if it says "empty state", one board shows it.
+Fill the boards with realistic data in the app's own vocabulary - real-looking symbols, plausible dates, the actual copy from `BRIEF.md`. Cover the states the pitch names: if it says "empty state", one board shows it.
 
 Put the file in the scratchpad directory. Title it after the project name.
 
