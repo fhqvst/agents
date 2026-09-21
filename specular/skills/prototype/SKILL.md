@@ -23,7 +23,7 @@ If either section is missing, tell the user to run `/specular:setup` and stop.
 
 `$ARGUMENTS` is a Linear project reference. Fetch it with `mcp__plugin_linear_linear__get_project`.
 
-The description has two parts written by `/specular:pitch`: the human top (Problem, Solution, How we'll know) and a `+++ BRIEF.md ... +++` collapsible. Read both. The top tells you what the change is for; everything the boards are built from is in `BRIEF.md`:
+The description has two parts written by `/specular:pitch`: the human top (Problem, Solution, Measuring success) and a `+++ BRIEF.md ... +++` collapsible. Read both. The top tells you what the change is for; everything the boards are built from is in `BRIEF.md`:
 
 - **Breadboard**: places, affordances, connections. One board per place.
 - **Copy**: use it verbatim.
@@ -94,7 +94,7 @@ If a board cannot be made faithful because the pitch lacks a detail (a label, a 
 Update the Linear project with `mcp__plugin_linear_linear__save_project`:
 
 - `links`: `[{url: "<artifact url>", title: "Prototype - <project name>"}]`. Links are append-only, so this never disturbs existing ones.
-- `patch`: insert a `## Prototype` section directly before `## How we'll know`:
+- `patch`: insert a `## Prototype` section directly before `## Measuring success`:
 
   ```markdown
   ## Prototype
@@ -106,6 +106,6 @@ Update the Linear project with `mcp__plugin_linear_linear__save_project`:
 
   ```
 
-  Use `insert_before` with anchor `## How we'll know`. Touch nothing else in the description. If a `## Prototype` section already exists (a re-run), replace it with `replace_range` from `## Prototype` to `## How we'll know`.
+  Use `insert_before` with anchor `## Measuring success`. Touch nothing else in the description. If a `## Prototype` section already exists (a re-run), replace it with `replace_range` from `## Prototype` to `## Measuring success`.
 
 Report the artifact URL, the boards it contains, and the open questions. The next step is `/specular:specify "<seed>"` for each line in the pitch's Suggested first cut.

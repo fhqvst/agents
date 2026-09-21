@@ -1,6 +1,6 @@
 ---
 name: pitch
-description: Shape a project as a Linear project description with two layers - a one-minute human pitch (Problem, Solution, How we'll know) and an agent-facing BRIEF.md collapsible holding the breadboard, copy, forks, no-gos, decisions, and scenarios that /specular:prototype and /specular:specify read later. Looks at the running app first when the work touches UI. Use when the user wants to shape a project, write a pitch, or turn a rough idea into a Linear project. Trigger on "pitch this", "shape X", "write a project description for X".
+description: Shape a project as a Linear project description with two layers - a one-minute human pitch (Problem, Solution, Measuring success) and an agent-facing BRIEF.md collapsible holding the breadboard, copy, forks, no-gos, decisions, and scenarios that /specular:prototype and /specular:specify read later. Looks at the running app first when the work touches UI. Use when the user wants to shape a project, write a pitch, or turn a rough idea into a Linear project. Trigger on "pitch this", "shape X", "write a project description for X".
 argument-hint: "<short description | project-id>"
 ---
 
@@ -8,12 +8,12 @@ argument-hint: "<short description | project-id>"
 
 Produce a Linear **project** whose description has two layers:
 
-1. **Top (human-facing, one minute):** Problem, Solution, How we'll know. A reviewer should be able to say yes or no to the direction without opening anything else. `/specular:prototype` adds a Prototype section between Solution and How we'll know later.
+1. **Top (human-facing, one minute):** Problem, Solution, Measuring success. A reviewer should be able to say yes or no to the direction without opening anything else. `/specular:prototype` adds a Prototype section between Solution and Measuring success later.
 2. **Bottom (agent-facing, additive):** a single Linear `+++ BRIEF.md` collapsible holding everything the next agent needs and the reviewer doesn't: the breadboard, copy, forks, no-gos, decisions, scenarios. `/specular:prototype` and `/specular:specify` read the whole description - top plus `BRIEF.md` is the full brief. `BRIEF.md` never restates Problem or Solution.
 
 The split is by reader, not by importance. If a line helps an agent build the right thing but a reviewer doesn't need it to judge the direction, it goes in `BRIEF.md`.
 
-A pitch sits one level above an RFC. It describes places and affordances, never interfaces, files, or estimates. Implementation is done by agents, so there is no appetite or time box: the constraint on scope is what can be verified, and that lives in **How we'll know**.
+A pitch sits one level above an RFC. It describes places and affordances, never interfaces, files, or estimates. Implementation is done by agents, so there is no appetite or time box: the constraint on scope is what can be verified, and that lives in **Measuring success**.
 
 The pipeline is `pitch` → `prototype` → `specify` (one RFC per item in the first cut) → `plan` → `implement`.
 
@@ -61,7 +61,7 @@ Screenshots are not uploaded anywhere. The Look at list plus the prototype are t
 
 ## 3. Find the number
 
-If the seed implies a metric (dropoff, conversion, time to first call, views), find the current value before grilling. Check for a PostHog MCP; if available, locate the insight and record the value and its link. If no tool can reach the number, ask the user for it once. If nobody has it, write "no baseline yet" in **How we'll know** and make establishing one the first item of the Suggested first cut.
+If the seed implies a metric (dropoff, conversion, time to first call, views), find the current value before grilling. Check for a PostHog MCP; if available, locate the insight and record the value and its link. If no tool can reach the number, ask the user for it once. If nobody has it, write "no baseline yet" in **Measuring success** and make establishing one the first item of the Suggested first cut.
 
 Never invent a number.
 
@@ -163,7 +163,7 @@ someone can do there afterwards that they can't today. 2-4 sentences.
 Then, only if a reasonable reviewer would suggest it, one line per
 alternative: "Not doing X because Y."]
 
-## How we'll know
+## Measuring success
 [The metric, its current value, the target. If there is no metric, the one
 thing a reviewer opens to call it done.]
 ```

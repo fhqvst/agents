@@ -124,7 +124,7 @@ A Linear project description written by `/specular:pitch`. Shape Up's pitch, min
 - **Problem** - a specific story with the number in it.
 - **Solution** - what changes, in the reader's words: which places are touched and what someone can do there afterwards.
 - **Prototype** - added by `/specular:prototype`: the Artifact link and any open questions prototyping surfaced.
-- **How we'll know** - the metric, its current value and target.
+- **Measuring success** - the metric, its current value and target.
 
 The whole top reads in about a minute. Below it, a `BRIEF.md` collapsible holds the agent-facing material: the breadboard (places, affordances per place, connections), the actual copy, the forks where an implementer's default would be wrong, no-gos, vocabulary, current state, the decisions log from grilling, scenarios, the URLs to look at, and a suggested first cut of RFC seeds. `/specular:prototype` and `/specular:specify` read it; teammates read the top.
 
@@ -193,7 +193,7 @@ Creates or updates `SPECULAR.md` (writing to the current working directory if it
 
 You hand it an idea (`/specular:pitch "..."`) or an existing Linear project reference to sharpen in place. If the work touches UI it starts the app and looks at every screen involved before asking anything. Then it grills you one level above `specify`: places, affordances, actors, states, copy, how success is verified, and every fork where an implementer's default would be wrong. It never asks about interfaces, files, estimates, or time.
 
-The result is a Linear **project** whose description is the [pitch format](#pitch-format): a one-minute human top (Problem, Solution, How we'll know) and a `BRIEF.md` collapsible carrying the breadboard, copy, forks, no-gos, decisions log, scenarios, the URLs to look at, and a suggested first cut of RFC seeds for `specify`.
+The result is a Linear **project** whose description is the [pitch format](#pitch-format): a one-minute human top (Problem, Solution, Measuring success) and a `BRIEF.md` collapsible carrying the breadboard, copy, forks, no-gos, decisions log, scenarios, the URLs to look at, and a suggested first cut of RFC seeds for `specify`.
 
 ### `/specular:prototype P-ENG-42`
 
