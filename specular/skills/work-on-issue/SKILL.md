@@ -45,17 +45,24 @@ RIGHT (vertical):
 
 ### 1. Planning
 
-This skill runs inside a subagent - there is no user to ask. The spec is already fixed. The implement loop passes in the parent's full body in two pieces: a **human-facing top** (Problem, Proposal, Constraints In/Out, headline Implementation pseudocode) and a `PLAN.md` (user stories, deeper implementation decisions, testing decisions). Both pieces are the brief:
+This skill runs inside a subagent - there is no user to ask. The spec is already fixed. The implement loop passes in the sub-issue body, and that body is the whole brief:
 
-- **Problem and proposal** come from the human-top.
-- **Out-of-scope guardrails** come from the human-top's Constraints "Out".
-- **Interface changes** come from the human-top's Implementation pseudocode plus `PLAN.md` → "Implementation Decisions" (deeper detail).
-- **Which behaviors to test** come from `PLAN.md` → "Testing Decisions" plus the sub-issue's acceptance criteria.
-- **Scope** is the single vertical slice described in the sub-issue body. Don't widen it.
+- **Problem and out-of-scope guardrails** come from Context.
+- **Interface changes** come from What to build. Any sentence quoted there is reproduced verbatim.
+- **What to reuse** comes from Build on. Open those files first; don't rediscover them.
+- **External copy** comes from Sources, verbatim from the named page and section.
+- **Which behaviors to test** come from Testing plus the acceptance criteria. Mirror the test file Testing names.
+- **Scope** is the single vertical slice described in What to build. Don't widen it.
+
+**The parent issue is not part of the brief.** If a section you need is missing or empty, comment on the sub-issue naming the gap and return `FAILED`. Do not fetch the parent to fill it.
 
 Respect ADRs in the area you're touching.
 
-**Read the repo's coding standards before writing code.** The root `CLAUDE.md` is already in your context; do not `cat` it or `AGENTS.md` again. It points at where the standards live - commonly a `standards/`, `docs/`, or `.github/` tree, often with a review checklist alongside. Read only the docs covering the area you're about to touch (style, testing, and the language-specific cluster). These encode rules that are not lint-enforced and not derivable from the surrounding code, so reading a neighbouring file is not a substitute. Running unattended is not an excuse to skip this: nobody will catch the violation for you.
+**Read the repo's coding standards before writing code.** The root `CLAUDE.md` is already in your context; do not `cat` it or `AGENTS.md` again. Read the docs the sub-issue's Standards section lists - nothing more, nothing less. These encode rules that are not lint-enforced and not derivable from the surrounding code, so reading a neighbouring file is not a substitute. Running unattended is not an excuse to skip this: nobody will catch the violation for you.
+
+**Edit with the `Edit` and `Write` tools**, even when the harness tells you to prefer Bash. Output tokens are the wall clock, and a heredoc or a patch script that carries old and new strings emits the code twice. Never rewrite a whole file you already wrote this run; edit it.
+
+Aim to make your first edit within ~15 tool calls. Build on and Testing name the files to open; open those, not the tree.
 
 Never write scratch or temp files into the working tree (no `/tmp/old.ts` stashes, no `*.bak` copies). To recall prior code, use `git show HEAD:path/to/file`. Stray files get swept into commits and leak across iterations.
 
@@ -66,7 +73,7 @@ Before writing any code:
 - [ ] Design interfaces for [testability](interface-design.md)
 - [ ] List the behaviors to test (not implementation steps), prioritizing the sub-issue's acceptance criteria
 
-**You can't test everything.** Focus testing effort on the acceptance criteria and the critical paths called out in `PLAN.md`'s Testing Decisions, not every possible edge case.
+**You can't test everything.** Focus testing effort on the acceptance criteria and the critical paths called out in the sub-issue's Testing section, not every possible edge case.
 
 ### 2. Tracer Bullet
 

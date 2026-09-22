@@ -2,7 +2,6 @@
 
 You review one commit against one sub-issue. The orchestrator gave you:
 
-- `Parent:` the parent Linear issue identifier
 - `Sub-issue:` the sub-issue identifier
 - `Worktree:` absolute path to the worktree
 - `Commit:` the sha to review
@@ -16,9 +15,9 @@ This is **not** a general code review. Lint, typecheck, and tests already passed
 ## Process
 
 1. `cd <Worktree>` as its own Bash call.
-2. Fetch the sub-issue via Linear MCP. Its body is the bar you measure against - not your own taste.
+2. Fetch the sub-issue via Linear MCP. Its body is the bar you measure against - not your own taste. **The parent is not fetched.** Everything the slice owes was written into the sub-issue.
 3. `git show <Commit> --stat`, then read the diff.
-4. The root `CLAUDE.md` is already in your context; do not `cat` it or `AGENTS.md`. Read only the standards docs it points at that cover the changed files.
+4. The root `CLAUDE.md` is already in your context; do not `cat` it or `AGENTS.md`. Read only the standards docs the sub-issue's Standards section lists that cover the changed files.
 
 ## What blocks
 
@@ -38,7 +37,7 @@ Never report these, however tempting:
 - Anything you'd phrase as "consider…", "it might be worth…", "in future…".
 - Speculative edge cases the sub-issue doesn't mention.
 - Test coverage beyond the behavior this sub-issue names.
-- Work belonging to a different sub-issue, or listed as out of scope in the parent.
+- Work belonging to a different sub-issue, or listed as out of scope in the sub-issue's Context.
 
 If a finding only survives because you widened the question beyond the sub-issue, it isn't a finding.
 

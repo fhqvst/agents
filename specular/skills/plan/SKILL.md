@@ -27,9 +27,11 @@ Fetch the parent issue with `mcp__plugin_linear_linear__get_issue`. The body has
 
 If the `+++ PLAN.md` block is missing, warn the user that the parent wasn't created with `/specular:specify` and the breakdown will be coarser; work from the human-top alone.
 
-### 3. Explore the codebase (optional)
+### 3. Explore the codebase
 
-If you have not already explored the relevant code, do so. Sub-issue titles and descriptions should use the project's domain vocabulary as it appears in the code and the parent issue body.
+Mandatory, scoped to the files and packages the slices will touch. Find the existing files, components, helpers, test files, and patterns each slice should build on, and note them by path - they go into the sub-issue bodies in step 6. Sub-issue titles and descriptions use the project's domain vocabulary as it appears in the code and the parent issue body.
+
+You do this once here. Every implement, review, and fix agent would otherwise rediscover it from scratch, one per slice.
 
 ### 4. Draft vertical slices
 
@@ -41,6 +43,7 @@ Slices may be **HITL** (requires human interaction - architectural decision, des
 - Each slice delivers a narrow but COMPLETE path through every layer (schema, API, UI, tests)
 - A completed slice is demoable or verifiable on its own
 - Prefer many thin slices over few thick ones
+- Prefer independent slices over a strict `blockedBy` chain where the seam allows it - the loop halts on the first failure, and a chain turns one failure into a stalled run
 </vertical-slice-rules>
 
 ### 5. Quiz the user
@@ -69,14 +72,39 @@ Mark HITL slices with a `**Type:** HITL` line in the body (see template below). 
 
 Publish in dependency order (blockers first) so you can pass real identifiers to the `blockedBy` field for later slices.
 
+**Each sub-issue is the complete brief for one agent.** The implement, review, and fix agents read the sub-issue and nothing else - they never fetch the parent. Anything the agent needs from the parent goes into the sub-issue: repeating parent text is fine. Each sub-issue is read by one agent once; the parent would otherwise be read by every agent on every slice.
+
 Use this body template:
 
 <issue-template>
 **Type:** HITL
 
+## Context
+
+The parent's Problem in two sentences, then the Constraints "Out" items that apply to this slice, each as a bullet. Skip Out items that can't touch this slice.
+
 ## What to build
 
-A concise description of this vertical slice. Describe the end-to-end behavior, not layer-by-layer implementation.
+A concise description of this vertical slice. Describe the end-to-end behavior, not layer-by-layer implementation. Quote verbatim any sentence, label, or template string from the parent that the slice must reproduce.
+
+## Build on
+
+- `path/to/existing/file.ts` - what it provides and how this slice uses it
+- `path/to/Component.tsx` - the component or helper to reuse, not reinvent
+- The pattern to follow, by path to an existing example
+
+## Sources
+
+For any copy or content that lives outside the repo: the exact URL and section heading. Quote it verbatim when short. Omit the section if nothing external is needed.
+
+## Testing
+
+- The parent's Testing Decisions that apply to this slice (e.g. "inline fixtures, not the real files")
+- `path/to/existing.test.ts` - the test file to mirror
+
+## Standards
+
+- `standards/foo.md` - the specific standards docs to read for this slice, by path
 
 ## Acceptance criteria
 
@@ -91,7 +119,7 @@ A concise description of this vertical slice. Describe the end-to-end behavior, 
 Or "None - can start immediately" if no blockers.
 </issue-template>
 
-Omit the `**Type:**` line entirely on AFK slices.
+Omit the `**Type:**` line entirely on AFK slices. Every other section is required except Sources, which is omitted when empty.
 
 Do NOT modify the parent issue's body or state.
 
