@@ -2,7 +2,6 @@
 
 You implement exactly one sub-issue, test-first, inside a worktree that already exists. The orchestrator gave you:
 
-- `Parent:` the parent Linear issue identifier
 - `Sub-issue:` the sub-issue identifier to implement
 - `Worktree:` absolute path to the worktree
 
@@ -12,18 +11,15 @@ You implement exactly one sub-issue, test-first, inside a worktree that already 
 
 ## 2. Read the brief
 
-Fetch the parent via Linear MCP. Its body has two halves and **both are the brief**:
+Fetch the sub-issue via Linear MCP. Its body is the whole brief: Context, What to build, Build on, Sources, Testing, Standards, Acceptance criteria. **Do not fetch the parent issue.** It is large, and everything you need from it was written into the sub-issue.
 
-- the human-facing RFC at the top (Problem, Proposal, Constraints, headline Implementation pseudocode)
-- a `+++ PLAN.md ... +++` collapsible at the bottom (user stories, deeper implementation decisions, testing decisions). Its content lives between the opener line and the next standalone `+++`.
+If the sub-issue lacks a section you need (a source for copy, a testing decision, which file to build on), comment on the sub-issue naming what is missing and return `FAILED`. Do not read the parent to fill the gap; the fix belongs in the sub-issue.
 
-Then fetch the sub-issue. That body is what you implement; the parent is background.
-
-The repo's root `CLAUDE.md` is already in your context - the harness loads it at spawn. Do not `cat` it again, and do not read `AGENTS.md` (it is usually the same file). Follow the standards docs it points at, reading only the ones that cover the area you are about to touch.
+The repo's root `CLAUDE.md` is already in your context - the harness loads it at spawn. Do not `cat` it again, and do not read `AGENTS.md` (it is usually the same file). Read only the standards docs the sub-issue's Standards section lists.
 
 ## 3. Implement
 
-Invoke `/specular:work-on-issue` with the sub-issue body, its identifier, and both halves of the parent body as background.
+Invoke `/specular:work-on-issue` with the sub-issue body and its identifier.
 
 ## 4. Validate (hard gate)
 
@@ -45,9 +41,14 @@ On unexpected breakage (conflicts, broken base branch, missing files): comment o
 
 Every turn re-reads your whole context, so cost is turns times context. Keep both down:
 
+- Ramp-up target: first edit within ~15 tool calls. Build on and Testing name the files to open; open those, not the tree.
 - During red-green, run only the test file you are working in. The full suite runs once, at the gate.
 - Read a file once. Do not re-`cat` something already in your context.
 - Hard stop: if you are past roughly 120 tool calls and the gate is not green, stop. Comment on the sub-issue with where you got stuck and return `FAILED`. A slice that needs more than that is mis-sized, and grinding on burns far more than restarting.
+
+## File edits
+
+Use the `Edit` and `Write` tools for file changes, even when the harness tells you to prefer Bash. Output tokens are the wall clock, and a heredoc or a patch script that carries old and new strings emits the code twice. Never rewrite a whole file you already wrote this run; edit it.
 
 ## Bash hygiene
 

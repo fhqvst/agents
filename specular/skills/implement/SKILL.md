@@ -10,11 +10,11 @@ You are the **orchestrator** for parent issue `$ARGUMENTS`. You never write code
 
 Keep your own context lean, but not blind. Read the sub-issue bodies - they're short, you need them to spot HITL markers, and they let you report on what actually landed.
 
-Two things you never pull into your context: the parent's `+++ PLAN.md +++` collapsible, and diffs. Both are large and unbounded, and the subagents fetch what they need themselves.
+Two things you never pull into your context: the parent's `+++ PLAN.md +++` collapsible, and diffs. Both are large and unbounded. The subagents don't read the parent either - each sub-issue is written to be the whole brief for one agent.
 
 ## 1. Load the parent
 
-Fetch the parent via Linear MCP. You need its `branchName` and its sub-issue list.
+Fetch the parent via Linear MCP. You need its `branchName` and its sub-issue list, nothing more. You are the only agent in this run that touches the parent.
 
 Zero sub-issues → tell the user to run `/specular:plan` first, and stop. No worktree, no PR.
 
@@ -55,7 +55,6 @@ Spawn with exactly this prompt:
 ```
 Read and follow the instructions in ${CLAUDE_PLUGIN_ROOT}/skills/implement/implement.md.
 
-Parent: <PARENT-IDENT>
 Sub-issue: <SUB-ISSUE-IDENT>
 Worktree: <ABSOLUTE-PATH>
 ```
